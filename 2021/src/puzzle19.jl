@@ -45,6 +45,8 @@ function solveit(scanners)
    rng = 1:dim
    transformed = zeros(Bool,dim)
    transformed[1] = true
+   transformations = fill(zeros(Int,3,3),dim)
+   translations = fill(zeros(Int,3),dim)
    while sum(.!transformed) > 0
       for p in rng[transformed]
          for q in rng[.!transformed]
@@ -54,17 +56,23 @@ function solveit(scanners)
                beaconmap = [scannerst[p][i[1]] => scanners[q][i[2]] for i in cis]
                r = beaconmap[1][1] .- beaconmap[2][1]
                s = beaconmap[1][2] .- beaconmap[2][2]
-               transformation = gettransformationmatrix(s,r)
-               translation = beaconmap[1][1] .- transformation*beaconmap[1][2]
-               scannerst[q] = [transformation * s + translation for s in scanners[q]]
+               transformations[q] = gettransformationmatrix(s,r)
+               translations[q] = beaconmap[1][1] .- transformation*beaconmap[1][2]
+               scannerst[q] = [transformations[q] * s + translations[q] for s in scanners[q]]
                transformed[q] = true
             end
          end
       end
    end
 
-   length(union(scannerst...))
+   beacons = union(scannerst...)
+   beacons,translations
+
 end
 
-scanners = getinput("2021\\inputs\\input19test.txt")
-solveit(scanners)
+manhattandistance(v,u) = sum(abs.(v .- u))
+
+scanners = getinput("2021\\inputs\\input19.txt")
+beacons, translations = solveit(scanners)
+[manhattandistance(x,y) for x in translations, y in translations]
+maximum(ans)
