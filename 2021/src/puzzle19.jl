@@ -38,7 +38,7 @@ function gettransformationmatrix(v,u)
    end    
 end
 
-function solveit(scanners)
+function getbeacons(scanners)
    scannerst = copy(scanners)
    dim = length(scanners)
    gs = scannergraph.(scanners)
@@ -57,7 +57,7 @@ function solveit(scanners)
                r = beaconmap[1][1] .- beaconmap[2][1]
                s = beaconmap[1][2] .- beaconmap[2][2]
                transformations[q] = gettransformationmatrix(s,r)
-               translations[q] = beaconmap[1][1] .- transformation*beaconmap[1][2]
+               translations[q] = beaconmap[1][1] .- transformations[q]*beaconmap[1][2]
                scannerst[q] = [transformations[q] * s + translations[q] for s in scanners[q]]
                transformed[q] = true
             end
@@ -72,7 +72,15 @@ end
 
 manhattandistance(v,u) = sum(abs.(v .- u))
 
-scanners = getinput("2021\\inputs\\input19.txt")
-beacons, translations = solveit(scanners)
-[manhattandistance(x,y) for x in translations, y in translations]
-maximum(ans)
+function solveit(file)
+   scanners = getinput(file)
+   beacons, translations = getbeacons(scanners)
+   maxmanhat = maximum([manhattandistance(x,y) for x in translations, y in translations])
+   println("$file solution:")
+   println("Part 1: $(length(beacons)) beacons")
+   println("Part 2: $maxmanhat is the maximum manhattan distance between two scanners")
+   println("")
+end
+
+solveit("2021\\inputs\\input19test.txt")
+solveit("2021\\inputs\\input19.txt")
