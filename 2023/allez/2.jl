@@ -1,8 +1,10 @@
-#ALLEZ CUISINE! 2023 Day 2
+# ALLEZ CUISINE! 2023 Day 2
+
+# Programmed using a hog's jowl stuffed ear JowlEar 
 
 const ocean = Dict("RedSnapper" => 12,"GreenLippedMussel"=>13,"BlueFinTuna"=>14)
 const hogfish = Dict("red" => "RedSnapper","green"=>"GreenLippedMussel","blue"=>"BlueFinTuna")
-fishmarket = readlines("2023/inputs/2.txt")
+const fishmarket = readlines("2023/inputs/2.txt")
 
 function shuck(oyster)
     pearls = split.(split(split(oyster,": ")[2],"; "),", ")
