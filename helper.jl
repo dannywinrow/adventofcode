@@ -19,8 +19,12 @@ const logdelim = " | "
 
 getinput() = getinput(getyearday()...)
 function getinput(year,day;type=String)
-    !isfile(getfilename(year,day)) && downloadAoCinput(year,day)
-    read(getfilename(year,day),type)
+    filepath = getfilename(year,day)
+    if !isfile(filepath)
+        mkpath(dirname(filepath))
+        downloadAoCinput(year,day)
+    end
+    read(filepath,type)
 end
 
 loadlines(splitbyempty=false) = loadlines(getyearday()...,splitbyempty)
@@ -60,11 +64,12 @@ function submitanswer(year, day, level, answer)
     s = String(r.body)
     correct = !occursin("not the right answer",s)
     logaction("$year-$day-$level","submit $answer, $correct")
-    if occursin("<article>",s)
-        return match(r"<article><p>(.+)</p></article>"s,s)[1]
-    else
-        return s
-    end
+    #if occursin("<article>",s)
+    #    return match(r"<article><p>(.+)</p></article>"s,s)[1]
+    #else
+    #    return s
+    #end
+    
 end
 
 function getyearday()
@@ -97,9 +102,12 @@ freqdict(str) = Dict([i => count(x->x==i,str) for i in str])
 
 createfile() = createfile(year(now()),day(now()))
 function createfile(year,day)
-    !isfile(getjuliafilename(year,day)) && cp(templatefile,getjuliafilename(year,day))
+    filepath = getjuliafilename(year,day)
+    if !isfile(filepath)
+        mkpath(dirname(filepath))
+        cp(templatefile,filepath)
+    end
 end
-
 
 neighbours(ci) = Ref(ci) .+ cartesiancube(length(ci))
 function cartesiancube(dims,i=false)
