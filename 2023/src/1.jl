@@ -10,12 +10,12 @@ function solveit()
 end
 
 pt1 = solveit()
-submitanswer(2023,1,1,pt1)
+submitanswer(1,pt1)
 
 const nums = split("one, two, three, four, five, six, seven, eight, nine",", ")
 
 function solveit2(lines = loadlines())
-    sum(parseline2.(lines))
+    sum(parseline.(lines))
 end
 
 #regex didn't work because eachmatch doesn't pick up overlapping numbers
@@ -39,7 +39,7 @@ function parseline(x)
 end
 
 pt2 = solveit2()
-submitanswer(2023,1,2,pt2)
+submitanswer(2,pt2)
 
 #Benchmarking
 using BenchmarkTools
