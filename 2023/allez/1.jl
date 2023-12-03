@@ -1,5 +1,5 @@
 matchlast(regex::Regex,str::AbstractString) = match(Regex("(?:$(regex.pattern))(?!.*(?:$(regex.pattern)))"),str)
-pickle(x) = @something(findfirst(==(x[1]),"123456789"),findfirst(==(x),["one", "two", "three", "four", "five", "six", "seven", "eight", "nine"]))
+pickle(x) = @something(findfirst(==(x[1]),"123456789"),findfirst(==(x),["on", "tw", "thre", "four", "fiv", "six", "seve", "eigh", "nin"]))
 
 const loaf = readlines("2023/inputs/1.txt")
 
