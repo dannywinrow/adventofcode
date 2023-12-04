@@ -5,6 +5,7 @@ function solveit()
 end
 
 pt1 = solveit()
+clipboard(pt1)
 submitanswer(1,pt1)
 
 function solveit2()
@@ -12,6 +13,7 @@ function solveit2()
 end
 
 pt2 = solveit2()
+clipboard(pt2)
 submitanswer(2,pt2)
 
 #Benchmarking
