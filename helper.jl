@@ -31,7 +31,7 @@ end
 getinput() = getinput(getyearday()...)
 function getinput(year,day;type=String)
     !isfile(getfilename(year,day)) && downloadAoCinput(year,day)
-    read(filepath,type)
+    read(getfilename(year,day),type)
 end
 
 function downloadAoCinput(year,day)
@@ -58,14 +58,15 @@ function loadlines(year,day,splitbyempty = false)
     lines
 end
 
-function loadgrid(type = Int,lines=loadlines())
+function loadgrid(type = Int,lines=loadlines();permute = true)
     grid = hcat(split.(lines,"")...)
     if type != Char
         grid = parse.(type,grid)
     else
         grid = getindex.(grid,1)
     end
-    permutedims(grid,(2,1))
+    permute && return permutedims(grid,(2,1))
+    grid
 end
 loadhashgrid() = parsehashgrid(loadlines())
 function parsehashgrid(lines)
@@ -125,6 +126,6 @@ freqdict(str) = Dict([i => count(x->x==i,str) for i in str])
 neighbours(ci) = Ref(ci) .+ cartesiancube(length(ci))
 function cartesiancube(dims,i=false)
     ret = CartesianIndices(Tuple(fill(-1:1,dims)))
-    i || filter!(x->x!=CartesianIndex(Tuple(fill(0,dims))),ret)
+    i || (ret = filter(x->x!=CartesianIndex(Tuple(fill(0,dims))),ret))
     ret
 end
