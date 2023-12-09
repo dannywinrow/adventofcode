@@ -1,28 +1,29 @@
 include("../../helper.jl")
 
-ranks = "123456789TJQKA"
-jokerranks = "J23456789TQKA"
+const ranks = "123456789TJQKA"
+const jokerranks = "J23456789TQKA"
 
 struct Hand
     hand
     bid
 end
 
-toranks(hand::Hand,ranks=ranks) = [findfirst(x,ranks) for x in hand.hand]
-isless(hand1::Hand,hand2::Hand) = handtype(hand1) == handtype(hand2) ? toranks(hand1) < toranks(hand2) : handtype(hand1) < handtype(hand2)
-islessjokers(hand1::Hand,hand2::Hand) = handtype(hand1,true) == handtype(hand2,true) ? toranks(hand1,jokerranks) < toranks(hand2,jokerranks) : handtype(hand1,true) < handtype(hand2,true)
-
-function sortedranks(hand::Hand)
-    fd = freqdict(toranks(hand))
-    s = Int[]
-    for r in 5:-1:1
-        cardranks = sort(collect(keys(filter(x->x[2] == r,fd))),rev=true)
-        for card in cardranks, _ in 1:r
-            push!(s,card)
-        end
-    end
-    s
+function parseinput()
+    lines = loadlines()
+    [Hand(x[1],parse(Int,x[2])) for x in split.(lines," ")]
 end
+
+toranks(hand::Hand,ranks=ranks) = [findfirst(x,ranks) for x in hand.hand]
+
+isless(hand1::Hand,hand2::Hand) =
+    handtype(hand1) == handtype(hand2) ?
+    toranks(hand1) < toranks(hand2) :
+    handtype(hand1) < handtype(hand2)
+
+islessjokers(hand1::Hand,hand2::Hand) =
+    handtype(hand1,true) == handtype(hand2,true) ?
+    toranks(hand1,jokerranks) < toranks(hand2,jokerranks) :
+    handtype(hand1,true) < handtype(hand2,true)
 
 handtype(hand::Hand,jokers=false) = handtype(hand.hand,jokers)
 function handtype(hand,jokers=false)
@@ -44,18 +45,16 @@ end
 bid(hand::Hand) = hand.bid
 
 function solveit()
-    lines = loadlines()
-    hands = [Hand(x[1],parse(Int,x[2])) for x in split.(lines," ")]
-    hands = sort(hands,lt=isless)
+    hands = parseinput()
+    sort!(hands,lt=isless)
     sum(bid.(hands) .* (1:length(hands)))
 end
 
 pt1 = solveit()
 
 function solveit2()
-    lines = loadlines()
-    hands = [Hand(x[1],parse(Int,x[2])) for x in split.(lines," ")]
-    hands = sort(hands,lt=islessjokers)
+    hands = parseinput()
+    sort!(hands,lt=islessjokers)
     sum(bid.(hands) .* (1:length(hands)))
 end
 
@@ -68,4 +67,15 @@ println("Part 2: $pt2")
 #isless(hand1::Hand,hand2::Hand) = handtype(hand1) == handtype(hand2) ? sortedranks(hand1) < sortedranks(hand2) : handtype(hand1) < handtype(hand2)
 #function sorthand(hand)
 #    Hand(ranks[sortedranks(hand)],hand.bid)
+#end
+#function sortedranks(hand::Hand)
+#    fd = freqdict(toranks(hand))
+#    s = Int[]
+#    for r in 5:-1:1
+#        cardranks = sort(collect(keys(filter(x->x[2] == r,fd))),rev=true)
+#        for card in cardranks, _ in 1:r
+#            push!(s,card)
+#        end
+#    end
+#    s
 #end
