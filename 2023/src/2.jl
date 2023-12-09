@@ -1,6 +1,7 @@
 include("../../helper.jl")
 
 const bag = Dict("red" => 12,"green"=>13,"blue"=>14)
+
 function solveit()
     lines = loadlines()
     sum(possible.(lines) .* collect(1:length(lines)))
@@ -18,8 +19,6 @@ function possible(game)
 end
 
 pt1 = solveit()
-submitanswer(1,pt1)
-
 
 function solveit2()
     lines = loadlines()
@@ -39,12 +38,6 @@ function powerof(game)
 end
 
 pt2 = solveit2()
-submitanswer(2,pt2)
 
-#Benchmarking
-using BenchmarkTools
-@benchmark pt1 = solveit()
-@benchmark pt2 = solveit2()
-
-#VISUALISATION
-using Colors, ImageShow
+println("Part 1: $pt1")
+println("Part 2: $pt2")

@@ -70,13 +70,12 @@ function solveit()
 end
 
 pt1 = solveit()
-clipboard(pt1)
-submitanswer(1,pt1)
 
 function simplify(a::UnitRange,b::UnitRange)
     ret = min(a[1],b[1]):max(a[end],b[end])
     length(ret) <= length(a) + length(b) ? ret : nothing
 end
+
 function simplify(v)
     ranges = copy(v)
     outranges=UnitRange[]
@@ -96,6 +95,7 @@ function simplify(v)
     end
     outranges
 end
+
 function maprange(map,range)
     ranges = [range]
     outranges = []
@@ -131,14 +131,6 @@ function solveit2(input = getinput();simplify=x->x)
 end
 
 pt2 = solveit2()
-clipboard(pt2)
-submitanswer(2,pt2)
 
-#Benchmarking
-using BenchmarkTools
-@benchmark pt1 = solveit()
-@benchmark pt2 = solveit2()
-@benchmark pt2s = solveit2(;simplify=simplify)
-
-#VISUALISATION
-using Colors, ImageShow
+println("Part 1: $pt1")
+println("Part 2: $pt2")

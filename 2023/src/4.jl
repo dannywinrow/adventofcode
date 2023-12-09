@@ -15,8 +15,6 @@ function solveit()
 end
 
 pt1 = solveit()
-clipboard(pt1)
-
 
 function wins(card)
     winnums, yournums = split(split(card,": ")[2]," | ")
@@ -37,12 +35,6 @@ function solveit2()
 end
 
 pt2 = solveit2()
-clipboard(pt2)
 
-#Benchmarking
-using BenchmarkTools
-@benchmark pt1 = solveit()
-@benchmark pt2 = solveit2()
-
-#VISUALISATION
-using Colors, ImageShow
+println("Part 1: $pt1")
+println("Part 2: $pt2")

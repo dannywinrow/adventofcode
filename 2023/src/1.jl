@@ -10,7 +10,6 @@ function solveit()
 end
 
 pt1 = solveit()
-submitanswer(1,pt1)
 
 const nums = split("one, two, three, four, five, six, seven, eight, nine",", ")
 
@@ -39,12 +38,6 @@ function parseline(x)
 end
 
 pt2 = solveit2()
-submitanswer(2,pt2)
 
-#Benchmarking
-using BenchmarkTools
-@benchmark pt1 = solveit()
-@benchmark pt2 = solveit2()
-
-#VISUALISATION
-using Colors, ImageShow
+println("Part 1: $pt1")
+println("Part 2: $pt2")

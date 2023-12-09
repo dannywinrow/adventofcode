@@ -91,13 +91,6 @@ function lcp(p1,p2)
 end
 
 pt2 = solveit2()
-clipboard(pt2)
-submitanswer(2,pt2)
 
-#Benchmarking
-using BenchmarkTools
-@benchmark pt1 = solveit()
-@benchmark pt2 = solveit2()
-
-#VISUALISATION
-using Colors, ImageShow
+println("Part 1: $pt1")
+println("Part 2: $pt2")

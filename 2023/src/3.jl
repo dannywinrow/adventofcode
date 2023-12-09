@@ -26,10 +26,7 @@ end
 ispart(num) = !isempty(intersect(surround(num),symbols))
 getnum(num) = parse(Int,grid[num])
 
-solveit() = sum(ispart.(nums) .* getnum.(nums))
-
-pt1 = solveit()
-clipboard(pt1)
+pt1 = sum(ispart.(nums) .* getnum.(nums))
 
 gears = [y for y in findall(r"\*",grid)]
 
@@ -50,15 +47,7 @@ function gearpower(gear)
     0
 end
 
-solveit2() = sum(gearpower.(gears))
+pt2 = sum(gearpower.(gears))
 
-pt2 = solveit2()
-clipboard(pt2)
-
-#Benchmarking
-using BenchmarkTools
-@benchmark pt1 = solveit()
-@benchmark pt2 = solveit2()
-
-#VISUALISATION
-using Colors, ImageShow
+println("Part 1: $pt1")
+println("Part 2: $pt2")

@@ -12,8 +12,6 @@ function solveit()
 end
 
 pt1 = solveit()
-clipboard(pt1)
-submitanswer(1,pt1)
 
 function solveit2()
     lines = loadlines()
@@ -25,16 +23,7 @@ function solveit2()
     length(first:last)
 end
 
-win(time,distance,d-1)
-length(c:d)
 pt2 = solveit2()
-clipboard(pt2)
-submitanswer(2,pt2)
 
-#Benchmarking
-using BenchmarkTools
-@benchmark pt1 = solveit()
-@benchmark pt2 = solveit2()
-
-#VISUALISATION
-using Colors, ImageShow
+println("Part 1: $pt1")
+println("Part 2: $pt2")
