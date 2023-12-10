@@ -59,10 +59,6 @@ function solveit2()
     # This step shortcuts, I think there's a way we can make this assumption
     # without seeing the input, but I'm not sure of the reasoning.
     #return lcm(getindex.(periods,2))
-    
-    lcm(periods[1][2],periods[2][2])
-    p1 = periods[1]; p2 = periods[2]
-    lcp(periods[1],periods[2])
 
     p1 = periods[1]
     for p2 in periods[2:end]
@@ -94,3 +90,5 @@ pt2 = solveit2()
 
 println("Part 1: $pt1")
 println("Part 2: $pt2")
+
+pt2 / 900000
