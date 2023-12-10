@@ -17,129 +17,119 @@ L---JF-JLJIIIIFJLJJ7
 L.L7LFJ|||||FJL7||LJ
 L7JLJL-JLJLJL--JLJ.L"""
 
-directions = Dict('U' => CartesianIndex(-1,0),'D' => CartesianIndex(1,0),'L' => CartesianIndex(0,-1),'R' => CartesianIndex(0,1))
-pipes = Dict('.'=>[],'|' => ['U','D'], '-' => ['L','R'], '7' => ['D','L'], 'L' => ['U','R'], 'J' => ['U','L'], 'F' => ['D','R'])
-opposites = Dict('L'=>'R','R'=>'L','U'=>'D','D'=>'U')
 
-function solveit(grid = loadgrid(Char))
-    start = findfirst(==('S'),grid)
-    direction = 'S'
-    for (key,val) in directions
-        if validentry(key, grid[start + val])
-            direction = key
-            break
-        end
-    end
-    traverse(grid,start,direction) / 2
-end
+U = CartesianIndex(-1,0)
+D = CartesianIndex(1,0)
+L = CartesianIndex(0,-1)
+R = CartesianIndex(0,1)
+directions = [U,D,L,R]
+pipes = Dict(
+    '.'=>[],
+    '|' => Set([U,D]), 
+    '-' => Set([L,R]), 
+    '7' => Set([D,L]), 
+    'L' => Set([U,R]),
+    'J' => Set([U,L]), 
+    'F' => Set([D,R])
+)
 
-validentry(direction,pipe) = opposites[direction] in pipes[pipe]
+import Base.rotr90, Base.rot180
+Base.rotr90(ci::CartesianIndex{2}) = CartesianIndex(ci[2],-ci[1])
+Base.rot180(ci::CartesianIndex{2}) = CartesianIndex(-ci[1],-ci[2])
 
-newdirection(pipe,directionentered) = filter(!=(opposites[directionentered]),pipes[pipe])[1]
+validmove(grid,cell,move) = (cell+move) in CartesianIndices(grid) && rot180(move) in pipes[grid[cell + move]]
 
-function traverse(grid,start,direction)
-    cell = start + directions[direction]
-    direction = newdirection(grid[cell],direction)
-    stepcnt = 1
-    while cell != start
-        stepcnt < 100 && @info direction, grid[cell]
+newdirection(pipe,directionentered) = collect(filter(!=(rot180(directionentered)),pipes[pipe]))[1]
+function traverse(grid,start,firstmove)
+    cell = start
+    nextmove = firstmove
+    stepcnt = 0
+    while true
+        cell = cell + nextmove
         stepcnt += 1
-        cell = cell + directions[direction]
         grid[cell] == 'S' && break
-        direction = newdirection(grid[cell],direction)
+        nextmove = newdirection(grid[cell],nextmove)
     end
     stepcnt
 end
 
+function solveit(grid = loadgrid(Char))
+    start = findfirst(==('S'),grid)
+    move = directions[findfirst(move->validmove(grid,start,move),directions)]
+    traverse(grid,start,move) ÷ 2
+end
 
 pt1 = solveit()
 #solveit(loadgrid(Char,split(example,"\n")))
 
-function solveit2(grid = loadgrid(Char))
-    start = findfirst(==('S'),grid)
-    direction = 'S'
-    for (key,val) in directions
-        if start + val in CartesianIndices(grid) && validentry(key, grid[start + val])
-            direction = key
-            break
-        end
-    end
-    path = getpath(grid,start,direction)
-
-    areagrid = similar(grid)
-    areagrid .= '.'
-    areagrid[path] .= grid[path]
-    replaceS!(areagrid)
-    L = nothing
-    for x in findall(==('L'),areagrid)
-        L = x
-        toout = unique(vcat(areagrid[L[1]+1:end,L[2]],areagrid[L[1],1:L[2]-1]))
-        isempty(toout) || length(toout) == 1 && toout[1] == '.'  && break
-    end
-    direction = 'U'
-    cell = L
+function getpath(grid,start,move)
+    path = [start]
     while true
-        cell += directions[direction]
-        cell == L && break
-        direction = newdirection(areagrid[cell],direction)
-        if areagrid[cell] == '|' || areagrid[cell] == '-'
-            outcell = cell + directions[rotations[direction]]
-            areagrid[outcell] == '.' && fillgroup!(areagrid,outcell,'I')
-        elseif !in(rotations[direction],pipes[areagrid[cell]])
-            outcell = cell + directions[rotations[direction]]
-            areagrid[outcell] == '.' && fillgroup!(areagrid,outcell,'I')
-            outcell = cell + directions[rotations[rotations[direction]]]
-            areagrid[outcell] == '.' && fillgroup!(areagrid,outcell,'I')
-        end
+        cell = path[end] + move
+        push!(path,cell)
+        grid[cell] == 'S' && break
+        move = newdirection(grid[cell],move)
     end
-    count(==('I'),areagrid)
+    path
 end
-
-rotations = Dict('R'=>'D','D'=>'L','L'=>'U','U'=>'R')
 
 function replaceS!(grid)
     start = findfirst(==('S'),grid)
-    dirs = []
-    for (key,val) in directions
-        if start + val in CartesianIndices(grid) && validentry(key, grid[start + val])
-            push!(dirs,key)
-        end
-    end
-    function reversepipe()
-        for (key,val) in pipes
-            if sort(val) == sort(dirs)
-                return key
-            end
-        end
-    end
-    grid[start] = reversepipe()
+    moves = Set(filter(move->validmove(grid,start,move),directions))
+    pipe = collect(filter(key->pipes[key]==moves, keys(pipes)))[1]
+    grid[start] = pipe
 end
+
 function fillgroup!(grid,cell,char)
     tovisit = [cell]
     grid[cell] = char
     while !isempty(tovisit)
         visiting = pop!(tovisit)
-        for x in values(directions)
-            if (visiting + x) in CartesianIndices(grid)
-                if grid[visiting + x] == '.'
-                    if !in(visiting + x, tovisit)
-                        grid[visiting + x] = char
-                        push!(tovisit,visiting + x)
+        for move in directions
+            if (visiting + move) in CartesianIndices(grid)
+                if grid[visiting + move] == '.'
+                    if !in(visiting + move, tovisit)
+                        grid[visiting + move] = char
+                        push!(tovisit,visiting + move)
                     end
                 end
             end
         end
     end
 end
-function getpath(grid,start,direction)
-    path = [start]
-    while true
-        cell = path[end] + directions[direction]
-        push!(path,cell)
-        grid[cell] == 'S' && break
-        direction = newdirection(grid[cell],direction)
+
+function solveit2(grid = loadgrid(Char))
+    start = findfirst(==('S'),grid)
+    move = directions[findfirst(move->validmove(grid,start,move),directions)]
+    path = getpath(grid,start,move)
+
+    areagrid = similar(grid)
+    areagrid .= '.'
+    areagrid[path] .= grid[path]
+    replaceS!(areagrid)
+    B = nothing
+    for x in findall(==('L'),areagrid)
+        B = x
+        toout = unique(vcat(areagrid[B[1]+1:end,B[2]],areagrid[B[1],1:B[2]-1]))
+        isempty(toout) || length(toout) == 1 && toout[1] == '.'  && break
     end
-    path
+    move = U
+    cell = B
+    while true
+        cell += move
+        cell == B && break
+        move = newdirection(areagrid[cell],move)
+        if areagrid[cell] == '|' || areagrid[cell] == '-'
+            outcell = cell + rotr90(move)
+            areagrid[outcell] == '.' && fillgroup!(areagrid,outcell,'I')
+        elseif !in(rotr90(move),pipes[areagrid[cell]])
+            outcell = cell + rotr90(move)
+            areagrid[outcell] == '.' && fillgroup!(areagrid,outcell,'I')
+            outcell = cell + rot180(move)
+            areagrid[outcell] == '.' && fillgroup!(areagrid,outcell,'I')
+        end
+    end
+    count(==('I'),areagrid)
 end
 
 pt2 = solveit2()
