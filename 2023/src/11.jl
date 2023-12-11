@@ -21,11 +21,10 @@ function solveit()
     cnt
 end
 
-
 pt1 = solveit()
 
 function solveit2()
-    grid = loadhashgrid()
+    grid = loadhashgrid() #function to load grid with . => false and # => true
     emptycols = findall(x->all(.!(x)),eachcol(grid))
     emptyrows = findall(x->all(.!(x)),eachrow(grid))
     galaxies = findall(grid)
