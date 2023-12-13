@@ -129,3 +129,42 @@ function cartesiancube(dims,i=false)
     i || (ret = filter(x->x!=CartesianIndex(Tuple(fill(0,dims))),ret))
     ret
 end
+
+
+
+function simplify(a::Int64,b::Int64)
+    a == b && return a\
+    a == b + 1 && return b:a
+    a + 1 == b && return a:b
+    nothing
+end
+simplify(a::Int64,b::UnitRange) = simplify(b,a)
+function simplify(a::UnitRange,b::Int64)
+    b in a && return a
+    a[1] == b + 1 && return b:a[2]
+    a[end] == b - 1 && return a[1]:b
+    nothing
+end
+function simplify(a::UnitRange,b::UnitRange)
+    ret = min(a[1],b[1]):max(a[end],b[end])
+    length(ret) <= length(a) + length(b) ? ret : nothing
+end
+function simplify(v)
+    ranges = Any[v...]
+    outranges=[]
+    while !isempty(ranges)
+        range = popfirst!(ranges)
+        broke = false
+        for (i,r) in enumerate(ranges)
+            if !isnothing(simplify(range,r))
+                ranges[i] = simplify(range,r)
+                broke = true
+                break
+            end
+        end
+        if !broke
+            push!(outranges,range)
+        end
+    end
+    outranges
+end
