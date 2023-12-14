@@ -20,6 +20,7 @@ function parseinput(input = getinput())
     grids = strip.(split(input,"\n\n"))
     parsehashgrid.(split.(grids,"\n"))
 end
+
 function f(grid)
     for i in 1:size(grid,1)-1
         rows = min(i,size(grid,1)-i)
@@ -29,7 +30,6 @@ end
 solve(grid) = @something f(rotr90(grid)) 100*f(grid)
 #ex = sum(solve.(parseinput(exampleinput)))
 pt1 = sum(solve.(parseinput()))
-
 
 function g(grid)
     for i in 1:size(grid,1)-1
