@@ -11,21 +11,6 @@ O.#..O.#.#
 #....###..
 #OO..#...."""
 
-
-function f(row)
-    j = length(row)
-    cnt = 0
-    for (i,c) in enumerate(row)
-        if c == 'O'
-            cnt += j
-            j -= 1
-        elseif c == '#'
-            j = length(row) - i
-        end
-    end
-    cnt
-end
-
 function tiltcol!(col)
     j = 1
     for (i,c) in enumerate(col)
