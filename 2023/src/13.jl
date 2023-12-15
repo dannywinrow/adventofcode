@@ -16,10 +16,7 @@ exampleinput = """#.##..##.
 ..##..###
 #....#..#"""
 
-function parseinput(input = getinput())
-    grids = strip.(split(input,"\n\n"))
-    parsehashgrid.(split.(grids,"\n"))
-end
+parseinput(input = getinput()) = loadhashgrid.(splitvect(parselines(input),""))
 
 function f(grid)
     for i in 1:size(grid,1)-1

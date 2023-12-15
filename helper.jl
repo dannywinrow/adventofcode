@@ -7,6 +7,7 @@ include("personal.jl")
 #you need to find sessioncookie from the browser when you log on to
 #adventofcode.com
 
+
 #PATHS
 getfilename(year,day) = "$year/inputs/$(day).txt"
 getjuliafilename(year,day) = "$year/src/$(day).jl"
@@ -17,8 +18,7 @@ const templatefile = "puzzletemplate.jl"
 const logfile = "log.txt"
 const logdelim = " | "
 
-#
-
+# FILE HANDLING
 createfile() = createfile(year(now()),day(now()))
 function createfile(year,day)
     filepath = getjuliafilename(year,day)
@@ -28,12 +28,7 @@ function createfile(year,day)
     end
 end
 
-getinput() = getinput(getyearday()...)
-function getinput(year,day;type=String)
-    !isfile(getfilename(year,day)) && downloadAoCinput(year,day)
-    read(getfilename(year,day),type)
-end
-
+# ACCESS AoC
 function downloadAoCinput(year,day)
     filepath = getfilename(year,day)
     !ispath(dirname(filepath)) && mkpath(dirname(filepath))
@@ -45,20 +40,42 @@ function downloadAoCinput(year,day)
     logaction("$year-$day","downloaded")
 end
 
-loadlines(splitbyempty=false) = loadlines(getyearday()...,splitbyempty)
+function getanswers(year,day)
+    url = puzzleurl(year,day)
+    headers = ["cookie" => "session=$sessioncookie"]
+    r = HTTP.request("GET",url,headers)
+    em = eachmatch(r"Your puzzle answer was <code>(\d+)", String(r.body))
+    isnothing(em) ? nothing : parse.(Int,x[1] for x in em)
+end
+
+function downloadAoCexample(year,day)
+    url = puzzleurl(year,day)
+    headers = ["cookie" => "session=$sessioncookie"]
+    r = HTTP.request("GET",url,headers)
+    m = match(r"<p>For example:</p>\n<pre><code>(.+?)\n</code></pre>"s, String(r.body))
+    isnothing(m) ? nothing : m[1]
+end
+
+# READ INPUTS
+getinput(;kwargs...) = getinput(getyearday()...;kwargs...)
+function getinput(year,day;type=String)
+    !isfile(getfilename(year,day)) && downloadAoCinput(year,day)
+    read(getfilename(year,day),type) |> strip
+end
+
+parselines(input) = split(strip(input),"\n")
+loadlines() = loadlines(getyearday()...)
 function loadlines(year,day,splitbyempty = false)
     !isfile(getfilename(year,day)) && downloadAoCinput(year,day)
     lines = readlines(getfilename(year,day))
     while lines[end] == ""
         lines = lines[1:end-1]
     end
-    if splitbyempty
-        lines = splitvect(lines,"")
-    end
     lines
 end
 
-function loadgrid(type = Int,lines=loadlines();permute = true)
+parsegrid(input = getinput();kwargs...) = parsegrid(split(input,"\n");kwargs...)
+function loadgrid(lines = readlines();type = Char,permute = true)
     grid = hcat(split.(lines,"")...)
     if type != Char
         grid = parse.(type,grid)
@@ -68,10 +85,16 @@ function loadgrid(type = Int,lines=loadlines();permute = true)
     permute && return permutedims(grid,(2,1))
     grid
 end
-loadhashgrid() = parsehashgrid(loadlines())
-function parsehashgrid(lines)
+
+parsehashgrid(input = getinput()) = loadhashgrid(split(input,"\n"))
+function loadhashgrid(lines = readlines())
     @assert length(unique(length.(lines))) == 1
     (x -> x =="#").(hcat(split.(lines,"")...))'
+end
+
+function splitvect(a::Vector,delim)
+    inds = vcat(0,findall(==(delim),a),length(a)+1)
+    view.(Ref(a), (:).(inds[1:end-1].+1,inds[2:end].-1))
 end
 
 # Broken from 2023
@@ -80,7 +103,8 @@ function submitanswer(year, day, level, answer)
     url = getsubmiturl(year,day)
     @info url, level, answer
     #headers = Dict("cookie" => "session=$sessioncookie")
-    #r = HTTP.request("POST",url,headers,body="level=$level&answer=$answer")
+    #r = HTTP.request("POST",url,headers;
+    #          body=HTTP.Form(["level" => level,"answer" => answer]))
     #s = String(r.body)
     #correct = !occursin("not the right answer",s)
     logaction("$year-$day-$level","submit $answer")
@@ -116,13 +140,11 @@ function loadlog()
     end
 end
 
-function splitvect(a::Vector,delim)
-    inds = vcat(0,findall(==(delim),a),length(a)+1)
-    view.(Ref(a), (:).(inds[1:end-1].+1,inds[2:end].-1))
-end
 
+# Frequency Dictionary
 freqdict(str) = Dict([i => count(x->x==i,str) for i in str])
 
+# CARTESIAN INDICES NEIGHBOURS
 neighbours(ci) = Ref(ci) .+ cartesiancube(length(ci))
 function cartesiancube(dims,i=false)
     ret = CartesianIndices(Tuple(fill(-1:1,dims)))
@@ -130,8 +152,7 @@ function cartesiancube(dims,i=false)
     ret
 end
 
-
-
+# UNIT RANGE SIMPLIFICATION
 function simplify(a::Int64,b::Int64)
     a == b && return a\
     a == b + 1 && return b:a

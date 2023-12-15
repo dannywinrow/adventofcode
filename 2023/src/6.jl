@@ -19,7 +19,7 @@ function solveit2()
 
     bound = distance ÷ time
     first = findfirst(x->win(time,distance,x), bound : time) + bound - 1
-    last = (time - distance ÷ time + 1) - findfirst(x->win(time,distance,x))
+    last = (time - distance ÷ time + 1) - findfirst(x->win(time,distance,x), (time-bound):-1:1)
     length(first:last)
 end
 

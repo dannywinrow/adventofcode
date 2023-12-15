@@ -53,14 +53,14 @@ function traverse(grid,start,firstmove)
     stepcnt
 end
 
-function solveit(grid = loadgrid(Char))
+function solveit(grid = loadgrid(;type=Char))
     start = findfirst(==('S'),grid)
     move = directions[findfirst(move->validmove(grid,start,move),directions)]
     traverse(grid,start,move) ÷ 2
 end
 
 pt1 = solveit()
-#solveit(loadgrid(Char,split(example,"\n")))
+#solveit(loadgrid(split(example,"\n");type=Char))
 
 function getpath(grid,start,move)
     path = [start]
@@ -98,7 +98,7 @@ function fillgroup!(grid,cell,char)
     end
 end
 
-function solveit2(grid = loadgrid(Char))
+function solveit2(grid = loadgrid(;type=Char))
     start = findfirst(==('S'),grid)
     move = directions[findfirst(move->validmove(grid,start,move),directions)]
     path = getpath(grid,start,move)
@@ -133,7 +133,7 @@ function solveit2(grid = loadgrid(Char))
 end
 
 pt2 = solveit2()
-#solveit(loadgrid(Char,split(example,"\n")))
+#solveit(loadgrid(split(example,"\n");type=Char))
 
 println("Part 1: $pt1")
 println("Part 2: $pt2")

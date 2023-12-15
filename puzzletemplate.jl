@@ -22,4 +22,4 @@ using BenchmarkTools
 @benchmark pt2 = solveit2()
 
 #VISUALISATION
-using Colors, ImageShow
+using Colors, Images
