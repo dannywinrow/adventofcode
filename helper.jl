@@ -75,7 +75,7 @@ function loadlines(year,day,splitbyempty = false)
 end
 
 parsegrid(input = getinput();kwargs...) = parsegrid(split(input,"\n");kwargs...)
-function loadgrid(lines = readlines();type = Char,permute = true)
+function loadgrid(lines = loadlines();type = Char,permute = true)
     grid = hcat(split.(lines,"")...)
     if type != Char
         grid = parse.(type,grid)
@@ -87,7 +87,7 @@ function loadgrid(lines = readlines();type = Char,permute = true)
 end
 
 parsehashgrid(input = getinput()) = loadhashgrid(split(input,"\n"))
-function loadhashgrid(lines = readlines())
+function loadhashgrid(lines = loadlines())
     @assert length(unique(length.(lines))) == 1
     (x -> x =="#").(hcat(split.(lines,"")...))'
 end
@@ -151,6 +151,12 @@ function cartesiancube(dims,i=false)
     i || (ret = filter(x->x!=CartesianIndex(Tuple(fill(0,dims))),ret))
     ret
 end
+
+# CARTESIAN INDICES ROTATION
+import Base.rotr90, Base.rot180
+Base.rotr90(ci::CartesianIndex{2}) = CartesianIndex(ci[2],-ci[1])
+Base.rotl90(ci::CartesianIndex{2}) = CartesianIndex(-ci[2],ci[1])
+Base.rot180(ci::CartesianIndex{2}) = CartesianIndex(-ci[1],-ci[2])
 
 # UNIT RANGE SIMPLIFICATION
 function simplify(a::Int64,b::Int64)
