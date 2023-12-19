@@ -65,7 +65,7 @@ end
 
 parselines(input) = split(strip(input),"\n")
 loadlines() = loadlines(getyearday()...)
-function loadlines(year,day,splitbyempty = false)
+function loadlines(year,day)
     !isfile(getfilename(year,day)) && downloadAoCinput(year,day)
     lines = readlines(getfilename(year,day))
     while lines[end] == ""
@@ -182,6 +182,11 @@ function simplify(a::UnitRange,b::UnitRange)
     ret = min(a[1],b[1]):max(a[end],b[end])
     length(ret) <= length(a) + length(b) ? ret : nothing
 end
+function simplify(a::UnitRange,b::UnitRange)
+    ret = min(a[1],b[1]):max(a[end],b[end])
+    length(ret) <= length(a) + length(b) ? ret : nothing
+end
+
 function simplify(v)
     ranges = Any[v...]
     outranges=[]
