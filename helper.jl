@@ -158,6 +158,12 @@ Base.rotr90(ci::CartesianIndex{2}) = CartesianIndex(ci[2],-ci[1])
 Base.rotl90(ci::CartesianIndex{2}) = CartesianIndex(-ci[2],ci[1])
 Base.rot180(ci::CartesianIndex{2}) = CartesianIndex(-ci[1],-ci[2])
 
+# DIRECTIONS
+U = CartesianIndex(-1,0)
+D = CartesianIndex(1,0)
+L = CartesianIndex(0,-1)
+R = CartesianIndex(0,1)
+
 # UNIT RANGE SIMPLIFICATION
 function simplify(a::Int64,b::Int64)
     a == b && return a\
