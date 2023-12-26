@@ -146,6 +146,7 @@ freqdict(str) = Dict([i => count(x->x==i,str) for i in str])
 
 # CARTESIAN INDICES NEIGHBOURS
 neighbours(ci) = Ref(ci) .+ cartesiancube(length(ci))
+adjacents(ci) = Ref(ci) .+ [U,D,L,R]
 function cartesiancube(dims,i=false)
     ret = CartesianIndices(Tuple(fill(-1:1,dims)))
     i || (ret = filter(x->x!=CartesianIndex(Tuple(fill(0,dims))),ret))
