@@ -1,82 +1,24 @@
-using HTTP
-using Dates
-using JSON3
-
-include("personal.jl")
-#personal.jl is not on GitHub because it contains my sessioncookie
-#you need to find sessioncookie from the browser when you log on to
-#adventofcode.com
-
-
-#PATHS
-getfilename(year,day) = "$year/inputs/$(day).txt"
-getjuliafilename(year,day) = "$year/src/$(day).jl"
-puzzleurl(year,day) = "https://adventofcode.com/$year/day/$day"
-getinputurl(year,day) = puzzleurl(year,day) * "/input"
-getsubmiturl(year,day) = puzzleurl(year,day) * "/answer"
-const templatefile = "puzzletemplate.jl"
-const logfile = "log.txt"
-const logdelim = " | "
-
-# FILE HANDLING
-createfile() = createfile(year(now()),day(now()))
-function createfile(year,day)
-    filepath = getjuliafilename(year,day)
-    if !isfile(filepath)
-        mkpath(dirname(filepath))
-        cp(templatefile,filepath)
-    end
-end
-
-# ACCESS AoC
-function downloadAoCinput(year,day)
-    filepath = getfilename(year,day)
-    !ispath(dirname(filepath)) && mkpath(dirname(filepath))
-    io = open(filepath, "w")
-    url = getinputurl(year,day)
-    headers = ["cookie" => "session=$sessioncookie"]
-    HTTP.request("GET",url,headers,response_stream=io)
-    close(io)
-    logaction("$year-$day","downloaded")
-end
-
-function getanswers(year,day)
-    url = puzzleurl(year,day)
-    headers = ["cookie" => "session=$sessioncookie"]
-    r = HTTP.request("GET",url,headers)
-    em = eachmatch(r"Your puzzle answer was <code>(\d+)", String(r.body))
-    isnothing(em) ? nothing : parse.(Int,x[1] for x in em)
-end
-
-function downloadAoCexample(year,day)
-    url = puzzleurl(year,day)
-    headers = ["cookie" => "session=$sessioncookie"]
-    r = HTTP.request("GET",url,headers)
-    m = match(r"<p>For example:</p>\n<pre><code>(.+?)\n</code></pre>"s, String(r.body))
-    isnothing(m) ? nothing : m[1]
-end
+include("aoc-helper.jl")
 
 # READ INPUTS
-getinput(;kwargs...) = getinput(getyearday()...;kwargs...)
-function getinput(year,day;type=String)
-    !isfile(getfilename(year,day)) && downloadAoCinput(year,day)
-    read(getfilename(year,day),type) |> strip
-end
 
-parselines(input) = split(strip(input),"\n")
-loadlines() = loadlines(getyearday()...)
-function loadlines(year,day)
-    !isfile(getfilename(year,day)) && downloadAoCinput(year,day)
-    lines = readlines(getfilename(year,day))
+parselines(input) = split(strip(input),"\r\n")
+loadlines(;part=1,problem="p") = loadlines(getyearday()...,part,problem)
+loadlines(year,day,part=1,problem="p") = loadlines(getfilename(year,day,part,problem))
+function loadlines(filename::String)
+    lines = readlines(filename)
     while lines[end] == ""
         lines = lines[1:end-1]
     end
     lines
 end
 
-parsegrid(input = getinput();kwargs...) = parsegrid(split(input,"\n");kwargs...)
-function loadgrid(lines = loadlines();type = Char,permute = true)
-    grid = hcat(split.(lines,"")...)
+loadgrid(filename::String;type=Char,delim="") = parsegrid(loadlines(filename);type=type,delim=delim)
+loadgrid(;part=1,problem="p",type=Char,delim="") = parsegrid(loadlines(;part=part,problem=problem);type=type,delim=delim)
+function  parsegrid(linesin;type = Char,permute = true,delim="")
+    maxline = maximum(length.(linesin))
+    lines = rpad.(linesin,maxline," ")
+    grid = hcat(split.(lines,delim)...)
     if type != Char
         grid = parse.(type,grid)
     else
@@ -86,10 +28,11 @@ function loadgrid(lines = loadlines();type = Char,permute = true)
     grid
 end
 
-parsehashgrid(input = getinput()) = loadhashgrid(split(input,"\n"))
-function loadhashgrid(lines = loadlines())
+loadhashgrid(filename::String) =loadhashgrid(loadlines(filename))
+loadhashgrid(;part=1,problem="p",kwargs...) = parsehashgrid(loadlines(;part=part,problem=problem);kwargs...)
+function parsehashgrid(lines;truechar="#")
     @assert length(unique(length.(lines))) == 1
-    (x -> x =="#").(hcat(split.(lines,"")...))'
+    (x -> x ==truechar).(hcat(split.(lines,"")...))'
 end
 
 function splitvect(a::Vector,delim)
@@ -144,9 +87,20 @@ end
 # Frequency Dictionary
 freqdict(str) = Dict([i => count(x->x==i,str) for i in str])
 
+# DIRECTIONS
+U = CartesianIndex(-1,0)
+D = CartesianIndex(1,0)
+L = CartesianIndex(0,-1)
+R = CartesianIndex(0,1)
+
+using CircularArrays
+directions = CircularArray([R,D,L,U])
+arrows = CircularArray(['>','v','<','^'])
+
 # CARTESIAN INDICES NEIGHBOURS
 neighbours(ci) = Ref(ci) .+ cartesiancube(length(ci))
-adjacents(ci) = Ref(ci) .+ [U,D,L,R]
+adjacents(ci) = Ref(ci) .+ directions
+
 function cartesiancube(dims,i=false)
     ret = CartesianIndices(Tuple(fill(-1:1,dims)))
     i || (ret = filter(x->x!=CartesianIndex(Tuple(fill(0,dims))),ret))
@@ -159,11 +113,6 @@ Base.rotr90(ci::CartesianIndex{2}) = CartesianIndex(ci[2],-ci[1])
 Base.rotl90(ci::CartesianIndex{2}) = CartesianIndex(-ci[2],ci[1])
 Base.rot180(ci::CartesianIndex{2}) = CartesianIndex(-ci[1],-ci[2])
 
-# DIRECTIONS
-U = CartesianIndex(-1,0)
-D = CartesianIndex(1,0)
-L = CartesianIndex(0,-1)
-R = CartesianIndex(0,1)
 
 # UNIT RANGE SIMPLIFICATION
 function simplify(a::Int64,b::Int64)
