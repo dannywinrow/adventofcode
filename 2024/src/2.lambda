@@ -1,0 +1,57 @@
+// LAMBDA formulas for Advent of Code
+// www.adventofcode.com
+// 2024 Day 2
+// Paste the input into the workbook and use
+// Part1(input) and Part2(input) to calculate answers.
+
+Part1 = LAMBDA(input,
+    SUM(--MAP(input, Part1Line))
+);
+
+Part1line = LAMBDA(line,
+    Is_Safe(Diffs(TEXTSPLIT(line, " ")))
+);
+
+Part2 = LAMBDA(input,
+    SUM(--MAP(input, Part2Line))
+);
+
+Part2line = LAMBDA(line,
+    Is_Safe_Rem(Diffs(TEXTSPLIT(line, " ")))
+);
+
+DeleteAt = LAMBDA(array, i,
+    IF(i = 1,
+        DROP(array, , 1),
+    IF(i = COLUMNS(array),
+        DROP(array, , -1),
+        HSTACK(
+            TAKE(array,,i - 1),
+            TAKE(array,,i -COLUMNS(array))
+        )
+    ))
+);
+
+Diffs = LAMBDA(array,
+    DROP(array, , 1) - DROP(array, , -1)
+);
+
+Is_Safe = LAMBDA(diffs,
+    OR(
+        AND(MAX(diffs) <= 3, MIN(diffs) > 0),
+        AND(MIN(diffs) >= -3, MAX(diffs) < 0)
+    )
+);
+
+Is_Safe_Rem = LAMBDA(diffs,
+    OR(
+        MAP(
+            SEQUENCE(COLUMNS(diffs)),
+            Is_Safe_Rem_i(diffs)
+        )
+    )
+);
+
+Is_Safe_Rem_i = LAMBDA(diffs,
+    LAMBDA(i,Is_Safe(DeleteAt(diffs, i)))
+);
