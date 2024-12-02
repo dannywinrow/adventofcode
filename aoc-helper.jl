@@ -6,9 +6,10 @@ include("personal.jl")
 #personal.jl is not on GitHub because it contains my sessioncookie
 #you need to find sessioncookie from the browser when you log on to
 #adventofcode.com
+#create file "personal.jl" with line `sessioncookie="Your session cookie here"`
 
 #PATHS
-getfilename(year,day) = "$year/inputs/$(day).txt"
+getfilename(year,day,part=1,problem="p") = "$year/inputs/$(day)$(problem)$(part).txt"
 getjuliafilename(year,day) = "$year/src/$(day).jl"
 puzzleurl(year,day) = "https://adventofcode.com/$year/day/$day"
 getinputurl(year,day) = puzzleurl(year,day) * "/input"
@@ -59,4 +60,24 @@ getinput(;kwargs...) = getinput(getyearday()...;kwargs...)
 function getinput(year,day;type=String)
     !isfile(getfilename(year,day)) && downloadAoCinput(year,day)
     read(getfilename(year,day),type) |> strip
+end
+
+submitanswer(level, answer) = submitanswer(getyearday()...,level,answer)
+function submitanswer(year, day, level, answer)
+    url = getsubmiturl(year,day)
+    @info url, level, answer
+    
+    headers = ["cookie" => "session=$sessioncookie"]
+    
+    body = Dict("level" => level,"answer" => answer)
+    r = HTTP.request("POST",url,headers,body)
+
+    s = String(r.body)
+    correct = !occursin("not the right answer",s)
+    logaction("$year-$day-$level","submit $answer")
+    if occursin("<article>",s)
+        return match(r"<article><p>(.+)</p></article>"s,s)[1]
+    else
+        return s
+    end
 end

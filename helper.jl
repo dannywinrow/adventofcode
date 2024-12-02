@@ -2,9 +2,13 @@ include("aoc-helper.jl")
 
 # READ INPUTS
 
-parselines(input) = split(strip(input),"\r\n")
+parselines(input) = split(strip(input),r"\r?\n")
 loadlines(;part=1,problem="p") = loadlines(getyearday()...,part,problem)
-loadlines(year,day,part=1,problem="p") = loadlines(getfilename(year,day,part,problem))
+function loadlines(year,day,part=1,problem="p")
+    fn = getfilename(year,day,part,problem)
+    !isfile(fn) && downloadAoCinput(year,day)
+    loadlines(fn)
+end
 function loadlines(filename::String)
     lines = readlines(filename)
     while lines[end] == ""
@@ -40,24 +44,6 @@ function splitvect(a::Vector,delim)
     view.(Ref(a), (:).(inds[1:end-1].+1,inds[2:end].-1))
 end
 
-# Broken from 2023
-submitanswer(level, answer) = submitanswer(getyearday()...,level,answer)
-function submitanswer(year, day, level, answer)
-    url = getsubmiturl(year,day)
-    @info url, level, answer
-    #headers = Dict("cookie" => "session=$sessioncookie")
-    #r = HTTP.request("POST",url,headers;
-    #          body=HTTP.Form(["level" => level,"answer" => answer]))
-    #s = String(r.body)
-    #correct = !occursin("not the right answer",s)
-    logaction("$year-$day-$level","submit $answer")
-    #if occursin("<article>",s)
-    #    return match(r"<article><p>(.+)</p></article>"s,s)[1]
-    #else
-    #    return s
-    #end
-end
-
 function getyearday()
     st = stacktrace()
     i = 1
@@ -82,7 +68,6 @@ function loadlog()
         puzzledictionary[puzzle] = Dict(:submissions)
     end
 end
-
 
 # Frequency Dictionary
 freqdict(str) = Dict([i => count(x->x==i,str) for i in str])
