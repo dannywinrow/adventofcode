@@ -30,6 +30,13 @@ end
 
 # ACCESS AoC
 function downloadAoCinput(year,day)
+
+    if !(@isdefined sessioncookie)
+        @warn """You need to set a global variable `sessioncookie` with your AoC session
+                    cookie if you want to automate downloading inputs"""
+        return nothing
+    end
+
     filepath = getfilename(year,day)
     !ispath(dirname(filepath)) && mkpath(dirname(filepath))
     io = open(filepath, "w")
@@ -42,6 +49,13 @@ end
 
 function getanswers(year,day)
     url = puzzleurl(year,day)
+    
+    if !(@isdefined sessioncookie)
+        @warn """You need to set a global variable `sessioncookie` with your AoC session
+                    cookie if you want to automate getting the answers you gave"""
+        return nothing
+    end
+
     headers = ["cookie" => "session=$sessioncookie"]
     r = HTTP.request("GET",url,headers)
     em = eachmatch(r"Your puzzle answer was <code>(\d+)", String(r.body))
@@ -50,6 +64,11 @@ end
 
 function downloadAoCexample(year,day)
     url = puzzleurl(year,day)
+    if !(@isdefined sessioncookie)
+        @warn """You need to set a global variable `sessioncookie` with your AoC session
+                    cookie if you want to automate downloading the example"""
+        return nothing
+    end
     headers = ["cookie" => "session=$sessioncookie"]
     r = HTTP.request("GET",url,headers)
     m = match(r"<p>For example:</p>\n<pre><code>(.+?)\n</code></pre>"s, String(r.body))
@@ -66,7 +85,13 @@ submitanswer(level, answer) = submitanswer(getyearday()...,level,answer)
 function submitanswer(year, day, level, answer)
     url = getsubmiturl(year,day)
     @info url, level, answer
-    
+
+    if !(@isdefined sessioncookie)
+        @warn """You need to set a global variable `sessioncookie` with your AoC session
+                    cookie if you want to automate answer submission"""
+        return nothing
+    end
+
     headers = ["cookie" => "session=$sessioncookie"]
     
     body = Dict("level" => level,"answer" => answer)
