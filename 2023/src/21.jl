@@ -70,5 +70,9 @@ function solve2(grid,stepcnt)
         x*(x-1) * 4*fullgridodd
 end
 
-solve2(grid,26501365)
+pt2 = solve2(grid,26501365)
+
+
+println("Part 1: $pt1")
+println("Part 2: $pt2")
 
