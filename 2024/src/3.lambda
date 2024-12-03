@@ -1,0 +1,92 @@
+// LAMBDA formulas for Advent of Code
+// www.adventofcode.com
+// 2024 Day 2
+// Paste the input into the workbook and use
+// Part1(input) and Part2(input) to calculate answers.
+//
+// Unfortunately I'm not part of the Microsoft Insiders
+// so no regex yet.  Not the most elegant.
+
+ReadInteger = LAMBDA(str,i,[num],
+    IF(i>len(str),0,
+        LET(char,MID(str,i,1),
+            IF(OR(char=",",ISERROR(NUMBERVALUE(char))),num,
+                ReadInteger(str,i+1,NUMBERVALUE(char)+num*10)
+            )
+        )
+    )
+);
+
+FindMuls = LAMBDA(str,[i],[tot],
+    IF(IsOmitted(i),FindMuls(str,1,tot),
+        IF(i>len(str),tot,
+            IF(MID(str,i,4)<>"mul(",FindMuls(str,i+1,tot),
+                LET(num, ReadInteger(str,i+4,0),
+                    IF(num = 0,FindMuls(str,i+4,tot),
+                        IF(MID(str,i+4+LEN(num),1)<>",",FindMuls(str,i+4+LEN(num),tot),
+                            Let(numtwo, ReadInteger(str,i+4+LEN(num)+1),
+                                IF(numtwo = 0, FindMuls(str,i+4+LEN(num)+1,tot),
+                                    IF(MID(str,i+4+LEN(num)+1+LEN(numtwo),1)<>")",FindMuls(str,i+4+LEN(num)+1+LEN(numtwo),tot),
+                                        FindMuls(str,i+4+LEN(num)+1+LEN(numtwo)+1,tot+num*numtwo)
+                                    )
+                                )
+                            )
+                        )
+                    )
+                )
+            )
+        )
+    )
+);
+
+Part1 = LAMBDA(input,
+    SUM(MAP(input,FindMuls))
+);
+
+Part2 = LAMBDA(input,
+    SUM(MAP(
+        INDEX(
+            TEXTSPLIT(
+                CONCAT(input),
+                "don't()",
+                "do()"
+            ),0,1),
+    FindMuls))
+);
+
+AllCharsIn = LAMBDA(str,characters,
+    AND(
+        MAP(
+            MID(str,SEQUENCE(1,LEN(str)),1),
+            LAMBDA(c,ISNUMBER(FIND(c,characters)))
+        )
+    )
+);
+
+AllCharsNumber = LAMBDA(str,
+    AllCharsIn(str,"1234567890")
+);
+
+Part1Alt = LAMBDA(input,
+    LET(arr,TEXTSPLIT(CONCAT(input),,"mul("),
+        firstcomma, FIND(",",arr),
+        firstcbrack, FIND(")",arr),
+        colA, LEFT(arr,firstcomma-1),
+        colB, MID(arr,firstcomma+1,firstcbrack-firstcomma-1),
+        colAvalid, MAP(colA,AllCharsNumber),
+        colBvalid, MAP(colB,AllCharsNumber),
+        calcs, colA * colB * colAvalid * colBvalid,
+        SUM(IFERROR(calcs,0))
+    )
+);
+
+Part2Alt = LAMBDA(input,
+    SUM(MAP(
+        INDEX(
+            TEXTSPLIT(
+                CONCAT(input),
+                "don't()",
+                "do()"
+            ),0,1),
+    Part1Alt))
+);
