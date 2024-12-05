@@ -1,0 +1,129 @@
+// LAMBDA formulas for Advent of Code
+// www.adventofcode.com
+// 2024 Day 5
+// Paste the input into a worksheet and use
+// Part1(Input) and Part2(Input) to calculate answers.
+// Where Input is the range you pasted into
+
+Rules = LAMBDA(input,
+    LET(divider, XMATCH(,input),
+        INDEX(input,sequence(divider-1))
+    )
+);
+
+Updates = LAMBDA(input,
+    LET(rulelength,ROWS(Rules(input)),
+        updatelength, ROWS(input)-rulelength-1,
+        v, INDEX(input,sequence(updatelength,1,rulelength+2)),
+        v
+    )
+);
+
+Satisfies = LAMBDA(update,rule,
+    LET(rulesplit,TEXTSPLIT(rule,"|"),
+        updatesplit,TEXTSPLIT(update,","),
+        locA, XMATCH(INDEX(rulesplit,1),updatesplit),
+        locB, XMATCH(INDEX(rulesplit,2),updatesplit),
+        IF(AND(ISNUMBER(locA),ISNUMBER(locB)),
+            locA < locB,
+            TRUE
+        )
+    )
+);
+
+Applies = LAMBDA(update,rule,
+    LET(rulesplit,TEXTSPLIT(rule,"|"),
+        updatesplit,TEXTSPLIT(update,","),
+        locA, XMATCH(INDEX(rulesplit,1),updatesplit),
+        locB, XMATCH(INDEX(rulesplit,2),updatesplit),
+        AND(ISNUMBER(locA),ISNUMBER(locB))
+    )
+);
+
+Valid = LAMBDA(update,rules,
+    AND(MAP(rules,LAMBDA(rule,Satisfies(update,rule))))
+);
+
+UpdateVal = LAMBDA(update,
+    LET(
+        updatesplit,TEXTSPLIT(update,","),
+        INDEX(updatesplit,ROUNDUP((COLUMNS(updatesplit)+1)/2,0))
+    )
+);
+
+Part1 = LAMBDA(input,
+    LET(rulearr,Rules(input),
+        updatearr,Updates(input),
+        ans,SUM(NUMBERVALUE(MAP(updatearr,
+                LAMBDA(update,
+                    IF(
+                        Valid(update,rulearr),
+                        UpdateVal(update),
+                        0
+                    )
+                )
+            )))
+        ,ans
+    )
+);
+
+
+CorrectForRule = LAMBDA(update,rule,
+    LET(rulesplit,TEXTSPLIT(rule,"|"),
+        updatesplit,TEXTSPLIT(update,","),
+        updatelen, COLUMNS(updatesplit),
+        locA, XMATCH(INDEX(rulesplit,1),updatesplit),
+        locB, XMATCH(INDEX(rulesplit,2),updatesplit),
+        IF(AND(ISNUMBER(locA),ISNUMBER(locB)),
+            IF(locA < locB,update,
+                LET(toB,IF(locB=1,"",DROP(updatesplit,,-(updatelen-locB+1))),
+                    BtoA,INDEX(updatesplit,SEQUENCE(,locA-locB,locB+1)),
+                    B,INDEX(updatesplit,locB),
+                    Ato,IF(locA=updatelen,"",DROP(updatesplit,,locA)),
+                    joined,HSTACK(toB,BtoA,B,Ato),
+                    newupdate,TEXTJOIN(",",TRUE,joined),
+                    newupdate
+                )
+            ),
+            update
+        )
+    )
+);
+
+CorrectUpdate = LAMBDA(update,rules,
+    LET(rulesapply,FILTER(rules,
+            MAP(rules,LAMBDA(rule,Applies(update,rule)))),
+        ans,REDUCE(update,rules,CorrectForRule),
+        ans
+    )
+);
+
+OrderUpdate = LAMBDA(update,rules,
+  IF(Valid(update,rules),update,
+    OrderUpdate(CorrectUpdate(update,rules),rules)
+  )
+);
+
+CorrectUpdateWRules = LAMBDA(rules,
+    LAMBDA(update,CorrectUpdate(update,rules))
+);
+RepeatFunc = LAMBDA(func,initial,n,
+    REDUCE(initial,SEQUENCE(n),LAMBDA(x,y,func(x)))
+);
+
+Part2 = LAMBDA(input,
+  LET(
+        rulearr,Rules(input),
+        updatearr,Updates(input),
+        ans,SUM(NUMBERVALUE(MAP(updatearr,
+                LAMBDA(update,
+                    IF(
+                        Valid(update,rulearr),
+                        0,
+                        UpdateVal(OrderUpdate(update,rules))
+                    )
+                )
+            )))
+        ,ans
+    )
+);
