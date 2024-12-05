@@ -1,0 +1,232 @@
+// LAMBDA formulas for Advent of Code
+// www.adventofcode.com
+// 2024 Day 4
+// Paste the input into the workbook and use
+// Part1(input) and Part2(input) to calculate answers.
+
+GetRowWord = LAMBDA(input,wordlength,r,c,
+    MID(INDEX(input, r), c, wordlength)
+);
+
+GetRowWords = LAMBDA(input,wordlength,
+    MAKEARRAY(ROWS(input),LEN(INDEX(input,1)),
+        LAMBDA(r,c,GetRowWord(input,wordlength,r,c))
+    )
+);
+
+GetColWord = LAMBDA(input,wordlength,r,c,
+    CONCAT(
+        MID(
+            INDEX(input, SEQUENCE(wordlength,1,r)),
+            c,1
+        )
+    )
+);
+
+GetColWords = LAMBDA(input,wordlength,
+    MAKEARRAY(ROWS(input),LEN(INDEX(input,1)),
+        LAMBDA(r,c,GetColWord(input,wordlength,r,c))
+    )
+);
+
+GetDiagWord = LAMBDA(input,wordlength,r,c,
+    CONCAT(
+        MID(
+            INDEX(input,SEQUENCE(wordlength,,r)),
+            SEQUENCE(wordlength,1,c),1
+        )
+    )
+);
+
+GetDiagWords = LAMBDA(input,wordlength,
+    MAKEARRAY(ROWS(input),LEN(INDEX(input,1)),
+        LAMBDA(r,c,GetDiagWord(input,wordlength,r,c))
+    )
+);
+
+GetDiagRevWord = LAMBDA(input,wordlength,r,c,
+    CONCAT(
+        MID(
+            INDEX(input,SEQUENCE(wordlength,,r)),
+            SEQUENCE(wordlength,1,c,-1),
+            1
+        )
+    )
+);
+
+GetDiagRevWords = LAMBDA(input,wordlength,
+    MAKEARRAY(ROWS(input),LEN(INDEX(input,1)),
+        LAMBDA(r,c,GetDiagRevWord(input,wordlength,r,c))
+    )
+);
+
+ReverseString = LAMBDA(str,
+    TEXTJOIN("",1,MID(str,SEQUENCE(LEN(str),,LEN(str),-1),1))
+);
+
+IsValid = LAMBDA(wordgrid,word,
+    MAP(
+        IFERROR(wordgrid,""),
+        LAMBDA(w,
+            OR(w=word,w=ReverseString(word))
+        )
+    )
+);
+
+Wordsearch = LAMBDA(input,word,
+    SUM(
+        --IsValid(GetRowWords(input,LEN(word)),word),
+        --IsValid(GetColWords(input,LEN(word)),word),
+        --IsValid(GetDiagWords(input,LEN(word)),word),
+        --IsValid(GetDiagRevWords(input,LEN(word)),word)
+    )
+);
+
+Crosswords = LAMBDA(input,word,
+    LET(
+        diagwords,
+            IsValid(DROP(
+                GetDiagWords(input,LEN(word)),
+                -(LEN(word)-1),
+                -(LEN(word)-1)
+            ),word),
+        diagrevwords,
+            IsValid(DROP(
+                GetDiagRevWords(input,LEN(word)),
+                -(LEN(word)-1),
+                LEN(word)-1
+            ),word),
+        SUM(--MAP(diagwords,diagrevwords,LAMBDA(x,y,AND(x,y))))
+    )
+);
+
+Part1 = LAMBDA(input,
+    Wordsearch(input,"XMAS")
+);
+
+Part2 = LAMBDA(input,
+    Crosswords(input,"MAS")
+)
+
+
+
+
+
+Day 4 Part 1
+
+```ex
+// LAMBDA formulas for Advent of Code
+// www.adventofcode.com
+// 2024 Day 4
+// Paste the input into the workbook and use
+// Part1(input) and Part2(input) to calculate answers.
+
+GetRowWord = LAMBDA(input,wordlength,r,c,
+    MID(INDEX(input, r), c, wordlength)
+);
+
+GetRowWords = LAMBDA(input,wordlength,
+    MAKEARRAY(ROWS(input),LEN(INDEX(input,1)),
+        LAMBDA(r,c,GetRowWord(input,wordlength,r,c))
+    )
+);
+
+GetColWord = LAMBDA(input,wordlength,r,c,
+    CONCAT(
+        MID(
+            INDEX(input, SEQUENCE(wordlength,1,r)),
+            c,1
+        )
+    )
+);
+
+GetColWords = LAMBDA(input,wordlength,
+    MAKEARRAY(ROWS(input),LEN(INDEX(input,1)),
+        LAMBDA(r,c,GetColWord(input,wordlength,r,c))
+    )
+);
+
+GetDiagWord = LAMBDA(input,wordlength,r,c,
+    CONCAT(
+        MID(
+            INDEX(input,SEQUENCE(wordlength,,r)),
+            SEQUENCE(wordlength,1,c),1
+        )
+    )
+);
+
+GetDiagWords = LAMBDA(input,wordlength,
+    MAKEARRAY(ROWS(input),LEN(INDEX(input,1)),
+        LAMBDA(r,c,GetDiagWord(input,wordlength,r,c))
+    )
+);
+
+GetDiagRevWord = LAMBDA(input,wordlength,r,c,
+    CONCAT(
+        MID(
+            INDEX(input,SEQUENCE(wordlength,,r)),
+            SEQUENCE(wordlength,1,c,-1),
+            1
+        )
+    )
+);
+
+GetDiagRevWords = LAMBDA(input,wordlength,
+    MAKEARRAY(ROWS(input),LEN(INDEX(input,1)),
+        LAMBDA(r,c,GetDiagRevWord(input,wordlength,r,c))
+    )
+);
+
+ReverseString = LAMBDA(str,
+    TEXTJOIN("",1,MID(str,SEQUENCE(LEN(str),,LEN(str),-1),1))
+);
+
+IsValid = LAMBDA(wordgrid,word,
+    MAP(
+        IFERROR(wordgrid,""),
+        LAMBDA(w,
+            OR(w=word,w=ReverseString(word))
+        )
+    )
+);
+
+Wordsearch = LAMBDA(input,word,
+    SUM(
+        --IsValid(GetRowWords(input,LEN(word)),word),
+        --IsValid(GetColWords(input,LEN(word)),word),
+        --IsValid(GetDiagWords(input,LEN(word)),word),
+        --IsValid(GetDiagRevWords(input,LEN(word)),word)
+    )
+);
+
+Part1 = LAMBDA(input,
+    Wordsearch(input,"XMAS")
+);
+```
+
+
+
+```ex
+
+Crosswords = LAMBDA(input,word,
+    LET(
+        diagwords,
+            IsValid(DROP(
+                GetDiagWords(input,LEN(word)),
+                -(LEN(word)-1),
+                -(LEN(word)-1)
+            ),word),
+        diagrevwords,
+            IsValid(DROP(
+                GetDiagRevWords(input,LEN(word)),
+                -(LEN(word)-1),
+                LEN(word)-1
+            ),word),
+        SUM(--MAP(diagwords,diagrevwords,LAMBDA(x,y,AND(x,y))))
+    )
+);
+
+Part2 = LAMBDA(input,
+    Crosswords(input,"MAS")
+)
+```
