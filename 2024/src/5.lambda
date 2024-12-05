@@ -104,13 +104,6 @@ OrderUpdate = LAMBDA(update,rules,
   )
 );
 
-CorrectUpdateWRules = LAMBDA(rules,
-    LAMBDA(update,CorrectUpdate(update,rules))
-);
-RepeatFunc = LAMBDA(func,initial,n,
-    REDUCE(initial,SEQUENCE(n),LAMBDA(x,y,func(x)))
-);
-
 Part2 = LAMBDA(input,
   LET(
         rulearr,Rules(input),
