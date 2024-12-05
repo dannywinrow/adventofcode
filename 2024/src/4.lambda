@@ -8,12 +8,6 @@ GetRowWord = LAMBDA(input,wordlength,r,c,
     MID(INDEX(input, r), c, wordlength)
 );
 
-GetRowWords = LAMBDA(input,wordlength,
-    MAKEARRAY(ROWS(input),LEN(INDEX(input,1)),
-        LAMBDA(r,c,GetRowWord(input,wordlength,r,c))
-    )
-);
-
 GetColWord = LAMBDA(input,wordlength,r,c,
     CONCAT(
         MID(
@@ -23,24 +17,12 @@ GetColWord = LAMBDA(input,wordlength,r,c,
     )
 );
 
-GetColWords = LAMBDA(input,wordlength,
-    MAKEARRAY(ROWS(input),LEN(INDEX(input,1)),
-        LAMBDA(r,c,GetColWord(input,wordlength,r,c))
-    )
-);
-
 GetDiagWord = LAMBDA(input,wordlength,r,c,
     CONCAT(
         MID(
             INDEX(input,SEQUENCE(wordlength,,r)),
             SEQUENCE(wordlength,1,c),1
         )
-    )
-);
-
-GetDiagWords = LAMBDA(input,wordlength,
-    MAKEARRAY(ROWS(input),LEN(INDEX(input,1)),
-        LAMBDA(r,c,GetDiagWord(input,wordlength,r,c))
     )
 );
 
@@ -54,9 +36,9 @@ GetDiagRevWord = LAMBDA(input,wordlength,r,c,
     )
 );
 
-GetDiagRevWords = LAMBDA(input,wordlength,
+applyfunc = LAMBDA(func,input,wordlength,
     MAKEARRAY(ROWS(input),LEN(INDEX(input,1)),
-        LAMBDA(r,c,GetDiagRevWord(input,wordlength,r,c))
+        LAMBDA(r,c,func(input,wordlength,r,c))
     )
 );
 
@@ -75,10 +57,10 @@ IsValid = LAMBDA(wordgrid,word,
 
 Wordsearch = LAMBDA(input,word,
     SUM(
-        --IsValid(GetRowWords(input,LEN(word)),word),
-        --IsValid(GetColWords(input,LEN(word)),word),
-        --IsValid(GetDiagWords(input,LEN(word)),word),
-        --IsValid(GetDiagRevWords(input,LEN(word)),word)
+        --IsValid(applyfunc(GetRowWord,input,LEN(word)),word),
+        --IsValid(applyfunc(GetColWord,input,LEN(word)),word),
+        --IsValid(applyfunc(GetDiagWord,input,LEN(word)),word),
+        --IsValid(applyfunc(GetDiagRevWord,input,LEN(word)),word)
     )
 );
 
@@ -86,13 +68,13 @@ Crosswords = LAMBDA(input,word,
     LET(
         diagwords,
             IsValid(DROP(
-                GetDiagWords(input,LEN(word)),
+                applyfunc(GetDiagWord,input,LEN(word)),
                 -(LEN(word)-1),
                 -(LEN(word)-1)
             ),word),
         diagrevwords,
             IsValid(DROP(
-                GetDiagRevWords(input,LEN(word)),
+                applyfunc(GetDiagRevWord,input,LEN(word)),
                 -(LEN(word)-1),
                 LEN(word)-1
             ),word),
