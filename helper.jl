@@ -62,11 +62,61 @@ function logaction(p,m)
 end
 
 function loadlog()
+    pdict = Dict()
     for (t,p,m) in split.(readlines(logfile)," | ")
         tp = parse(DateTime,t)
-        split(p,"-")
-        puzzledictionary[puzzle] = Dict(:submissions)
+        puzzle = parse.(Int,split(p,"-"))
+        action = split(m,",")
+        if action[1] == "downloaded"
+            year,day = puzzle
+            d = get!(pdict,(year,day,0),Date(2200,1,1))
+            if tp < d
+                pdict[(year,day,0)] = tp
+            end
+        end
+        if action[1] == "submit"
+            #@info action
+            if parse(Bool,action[3]) == true
+                #@info puzzle
+                year,day,part = puzzle
+                d = get!(pdict,(year,day,part),Date(2200,1,1))
+                if tp < d
+                    pdict[(year,day,part)] = tp
+                end
+            end
+        end
     end
+    rdict = Dict()
+    for (k,v) in pdict
+        if k[3] > 0
+            rdict[k] = pdict[k] - pdict[(k[1],k[2],0)]
+        end
+    end
+    rdict
+end
+
+function format(m::Millisecond)
+    seconds = m.value ÷ 1000
+    minutes = seconds ÷ 60
+    secondsrem = seconds - minutes * 60
+    "$(minutes)m $(secondsrem)s"
+end
+function displaylogyear(year)
+    log = loadlog()
+    filter!(k->k[1][1] == year,log)
+    log = [k=>v for (k,v) in log]
+    sort!(log,by=x->x[1])
+    println("Day\tPart 1\t\tPart 2")
+    println("------------------------------")
+    for x in log
+        year,day,part = x[1]
+        time = x[2]
+        if part == 1
+            print("$day\t$(format(time))")
+        elseif part == 2
+            print("\t\t$(format(time))\n")
+        end
+    end 
 end
 
 # Frequency Dictionary

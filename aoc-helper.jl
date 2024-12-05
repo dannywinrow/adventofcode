@@ -99,7 +99,7 @@ function submitanswer(year, day, level, answer)
 
     s = String(r.body)
     correct = !occursin("not the right answer",s)
-    logaction("$year-$day-$level","submit $answer")
+    logaction("$year-$day-$level","submit,$answer,$correct")
     if occursin("<article>",s)
         return match(r"<article><p>(.+)</p></article>"s,s)[1]
     else
