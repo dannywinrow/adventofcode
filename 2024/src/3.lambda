@@ -1,6 +1,6 @@
 // LAMBDA formulas for Advent of Code
 // www.adventofcode.com
-// 2024 Day 2
+// 2024 Day 3
 // Paste the input into the workbook and use
 // Part1(input) and Part2(input) to calculate answers.
 //
@@ -54,39 +54,39 @@ Part2 = LAMBDA(input,
     FindMuls))
 );
 
-AllCharsIn = LAMBDA(str,characters,
-    AND(
-        MAP(
-            MID(str,SEQUENCE(1,LEN(str)),1),
-            LAMBDA(c,ISNUMBER(FIND(c,characters)))
+    AllCharsIn = LAMBDA(str,characters,
+        AND(
+            MAP(
+                MID(str,SEQUENCE(1,LEN(str)),1),
+                LAMBDA(c,ISNUMBER(FIND(c,characters)))
+            )
         )
-    )
-);
+    );
 
-AllCharsNumber = LAMBDA(str,
-    AllCharsIn(str,"1234567890")
-);
+    AllCharsNumber = LAMBDA(str,
+        AllCharsIn(str,"1234567890")
+    );
 
-Part1Alt = LAMBDA(input,
-    LET(arr,TEXTSPLIT(CONCAT(input),,"mul("),
-        firstcomma, FIND(",",arr),
-        firstcbrack, FIND(")",arr),
-        colA, LEFT(arr,firstcomma-1),
-        colB, MID(arr,firstcomma+1,firstcbrack-firstcomma-1),
-        colAvalid, MAP(colA,AllCharsNumber),
-        colBvalid, MAP(colB,AllCharsNumber),
-        calcs, colA * colB * colAvalid * colBvalid,
-        SUM(IFERROR(calcs,0))
-    )
-);
+    Part1Alt = LAMBDA(input,
+        LET(arr,TEXTSPLIT(CONCAT(input),,"mul("),
+            firstcomma, FIND(",",arr),
+            firstcbrack, FIND(")",arr),
+            colA, LEFT(arr,firstcomma-1),
+            colB, MID(arr,firstcomma+1,firstcbrack-firstcomma-1),
+            colAvalid, MAP(colA,AllCharsNumber),
+            colBvalid, MAP(colB,AllCharsNumber),
+            calcs, colA * colB * colAvalid * colBvalid,
+            SUM(IFERROR(calcs,0))
+        )
+    );
 
-Part2Alt = LAMBDA(input,
-    SUM(MAP(
-        INDEX(
-            TEXTSPLIT(
-                CONCAT(input),
-                "don't()",
-                "do()"
-            ),0,1),
-    Part1Alt))
-);
+    Part2Alt = LAMBDA(input,
+        SUM(MAP(
+            INDEX(
+                TEXTSPLIT(
+                    CONCAT(input),
+                    "don't()",
+                    "do()"
+                ),0,1),
+        Part1Alt))
+    );
