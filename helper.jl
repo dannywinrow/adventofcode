@@ -101,9 +101,9 @@ function format(m::Millisecond)
     secondsrem = seconds - minutes * 60
     "$(minutes)m $(secondsrem)s"
 end
-function displaylogyear(year)
+function displaylog(year = 0)
     log = loadlog()
-    filter!(k->k[1][1] == year,log)
+    year > 0 && filter!(k->k[1][1] == year,log)
     log = [k=>v for (k,v) in log]
     sort!(log,by=x->x[1])
     println("Day\tPart 1\t\tPart 2")
