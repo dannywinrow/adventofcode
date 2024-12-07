@@ -9,7 +9,10 @@ include("personal.jl")
 #create file "personal.jl" with line `sessioncookie="Your session cookie here"`
 
 #PATHS
-getfilename(year,day,part=1,problem="p") = "$year/inputs/$(day)"*(parse(Int,year) >= 2024 ? "$(problem)$(part)" : "")*".txt"
+getfilename() = getfilename(getyearday()...)
+getfilename(year::AbstractString,day,part=1,problem="p") = getfilename(parse(Int,year),day,part,problem)
+getfilename(year,day,part=1,problem="p") = "$year/inputs/$(day)" * (year >= 2024 ? "$(problem)$(part)" : "") * ".txt"
+
 getjuliafilename(year,day) = "$year/src/$(day).jl"
 puzzleurl(year,day) = "https://adventofcode.com/$year/day/$day"
 getinputurl(year,day) = puzzleurl(year,day) * "/input"
