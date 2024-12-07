@@ -99,20 +99,13 @@ CorrectUpdate = LAMBDA(update,rules,
 );
 
 OrderUpdate = LAMBDA(update,rules,
-  IF(Valid(update,rules),update,
-    OrderUpdate(CorrectUpdate(update,rules),rules)
-  )
-);
-
-CorrectUpdateWRules = LAMBDA(rules,
-    LAMBDA(update,CorrectUpdate(update,rules))
-);
-RepeatFunc = LAMBDA(func,initial,n,
-    REDUCE(initial,SEQUENCE(n),LAMBDA(x,y,func(x)))
+    IF(Valid(update,rules),update,
+        OrderUpdate(CorrectUpdate(update,rules),rules)
+    )
 );
 
 Part2 = LAMBDA(input,
-  LET(
+LET(
         rulearr,Rules(input),
         updatearr,Updates(input),
         ans,SUM(NUMBERVALUE(MAP(updatearr,
