@@ -1,0 +1,86 @@
+// LAMBDA formulas for Advent of Code
+// www.adventofcode.com
+// 2024 Day 7
+// Paste the input into a worksheet and use
+// =Part1(Input) and =Part2(Input) to calculate answers.
+// Where Input is the range you pasted into
+
+parseLine = LAMBDA(line,
+    LET(
+        v, TEXTSPLIT(line," ",": "),
+        total, NUMBERVALUE(INDEX(v,1,1)),
+        nums, NUMBERVALUE(DROP(v,1)),
+        validcalc(total,nums)
+    )
+);
+
+validcalc = LAMBDA(total,nums,
+    LET(
+        a,INDEX(nums,1,1),
+        b,INDEX(nums,1,2),
+        IF(
+            COLUMNS(nums)=2,
+            OR(
+                total = a + b,
+                total = a * b
+            ),
+            AND(
+                a <= total,
+                OR(
+                    validcalc(total,HSTACK(a + b, DROP(nums,,2))),
+                    validcalc(total,HSTACK(a * b, DROP(nums,,2)))
+                )
+            )
+        )
+    )
+);
+
+Part1 = LAMBDA(input,
+    SUM(NUMBERVALUE(
+        FILTER(
+            TEXTBEFORE(input,": "),
+            BYROW(input,parseLine)
+        )
+    ))
+);
+
+parseLine2 = LAMBDA(line,
+    LET(
+        v, TEXTSPLIT(line," ",": "),
+        total, NUMBERVALUE(INDEX(v,1,1)),
+        nums, NUMBERVALUE(DROP(v,1)),
+        validcalc2(total,nums)
+    )
+);
+
+validcalc2 = LAMBDA(total,nums,
+    LET(
+        a,INDEX(nums,1,1),
+        b,INDEX(nums,1,2),
+        IF(
+            COLUMNS(nums)=2,
+            OR(
+                total = a + b,
+                total = a * b,
+                total = NUMBERVALUE(CONCAT(a,b))
+            ),
+            AND(
+                a <= total,
+                OR(
+                    validcalc2(total,HSTACK(a + b, DROP(nums,,2))),
+                    validcalc2(total,HSTACK(a * b, DROP(nums,,2))),
+                    validcalc2(total,HSTACK(NUMBERVALUE(CONCAT(a,b)), DROP(nums,,2)))
+                )
+            )
+        )
+    )
+);
+
+Part2 = LAMBDA(input,
+    SUM(NUMBERVALUE(
+        FILTER(
+            TEXTBEFORE(input,": "),
+            BYROW(input,parseLine2)
+        )
+    ))
+);
