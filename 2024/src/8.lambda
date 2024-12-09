@@ -1,0 +1,257 @@
+// LAMBDA formulas for Advent of Code
+// www.adventofcode.com
+// 2024 Day 8
+// Paste the input into a worksheet and use
+// =Part1(Input) and =Part2(Input) to calculate answers.
+// Where Input is the range you pasted into
+
+GetCharFrom = LAMBDA(input,
+    LAMBDA(r,c,
+        MID(INDEX(input, r), c, 1)
+    )
+);
+
+InputToGrid = LAMBDA(input,
+    MAKEARRAY(
+        ROWS(input),
+        LEN(TAKE(input,1)),
+        GetCharFrom(input)
+    )
+);
+
+UniqueWithFunc = LAMBDA(arr,func,
+    REDUCE(,arr,
+        LAMBDA(a,v,
+            IF(SUM(--func(a,v)),a,VSTACK(a,v))
+        )
+    )
+);
+
+OneMod = LAMBDA(number,divisor,
+    divisor-MOD(-number,divisor)
+);
+
+Indices = LAMBDA(rs,cs,
+    VSTACK(FLOOR((SEQUENCE(,rs*cs)-1)/cs,1)+1,OneMod(SEQUENCE(,rs*cs),cs))
+);
+IndicesM = LAMBDA(matrix,
+    Indices(ROWS(matrix),COLUMNS(matrix))
+);
+
+FindAllInMatrix = LAMBDA(matrix,validfunc,
+    FILTER(indicesM(matrix),validfunc(TOROW(matrix)))
+);
+
+InBounds = LAMBDA(grid,ind,
+    LET(
+        nr,INDEX(ind,1,1),
+        nc,INDEX(ind,2,1),
+        AND(nr>=1,nc>=1,nr<=ROWS(grid),nc<=COLUMNS(grid))
+    )
+);
+
+Div = LAMBDA(numerator,divisor,
+    FLOOR(numerator/divisor,1)
+);
+
+IsIn = LAMBDA(tofind,matrix,[func_BYROW],
+    LET(
+        func,IF(ISOMITTED(func_BYROW),BYROW,func_BYROW),
+        found,OR(func(matrix,
+            LAMBDA(arr,AND(arr=tofind))
+        )),
+        found
+    )
+);
+
+NextCombo2F = LAMBDA(n,
+    LAMBDA([combo],
+        IF(OR(ISOMITTED(combo),combo=0),{1;2},
+            LET(
+                a,index(combo,1,1),
+                b,index(combo,2,1),
+                IF(b < n, 
+                    VSTACK(a,b+1), 
+                    IF(
+                        a < n-1, 
+                        VSTACK(a+1,a+2),
+                        {0;0}
+                    )
+                )
+            )
+        )
+    )
+);
+
+Combos2 = LAMBDA(n,
+    IF(n=2,{1;2},
+    REDUCE({1;2},SEQUENCE(COMBIN(n,2)-1),
+        LAMBDA(combo,v,HSTACK(combo,NextCombo2F(n)(TAKE(combo,,-1))))
+    ))
+);
+
+Antinodes = LAMBDA(grid,antA,antB,
+    LET(
+        antiA,antA*2-antB,
+        antiB,antB*2-antA,
+        IF(InBounds(grid,antiA),
+            IF(InBounds(grid,antiB),
+                HSTACK(antiA,antiB),
+                antiA
+            ),
+            IF(InBounds(grid,antiB),
+                antiB,
+                {0;0}
+            )
+        )
+    )
+);
+
+WalkVectorThrough = LAMBDA(grid,ind,vec,
+    LET(
+        indx, INDEX(ind,1,1),
+        indy, INDEX(ind,2,1),
+        vecx, INDEX(vec,1,1),
+        vecy, INDEX(vec,2,1),
+        gridx, ROWS(grid),
+        gridy, COLUMNS(grid),
+        xmin, IF(vecx = 0,gridx,
+            IF(SIGN(vecx)=1,
+            div(indx-1, vecx),
+            div(gridx-indx, -vecx)
+        )),
+        ymin, IF(vecy = 0, gridy,
+            IF(SIGN(vecy)=1,
+                div(indy-1, vecy),
+                div(gridy-indy, -vecy)
+        )),
+        xmax, IF(vecx = 0,gridx,
+            IF(SIGN(vecx)=1,
+                div(gridx-indx, vecx),
+                div(indx-1, -vecx)
+            )),
+        ymax, IF(vecy = 0,gridy,
+            IF(SIGN(vecy)=1,
+            div(gridy-indy, vecy),
+            div(indy-1, -vecy)
+        )),
+        minindx, indx - vecx*MIN(xmin,ymin),
+        minindy, indy - vecy*MIN(xmin,ymin),
+        totalsteps, MIN(xmin,ymin)+MIN(xmax,ymax),
+        xs, minindx + SEQUENCE(,totalsteps+1,0)*vecx,
+        ys, minindy + SEQUENCE(,totalsteps+1,0)*vecy,
+        VSTACK(xs,ys)
+        //debugging
+        //WRAPCOLS(HSTACK(indx,indy,vecx,vecy,gridx,gridy,xmin,ymin,xmax,ymax,minindx,minindy,totalsteps),2)
+    )
+);
+
+AntinodesP2 = LAMBDA(grid,antA,antB,
+    LET(
+        vec,antA-antB,
+        div,GCD(ABS(vec)), //index(vec,1,1)),ABS(index(vec,2,1)),
+        minvec,vec/div,
+        WalkVectorThrough(grid,antA,minvec)
+    )
+);
+
+AntennaeAntinodes = LAMBDA(grid,antennae,
+    LET(
+        combos, Combos2(COLUMNS(antennae)),
+        REDUCE({0;0},SEQUENCE(COLUMNS(combos)),
+            LAMBDA(acc,i,
+                LET(
+                    a,index(combos,1,i),
+                    b,index(combos,2,i),
+                    antA,index(antennae,{1;2},a),
+                    antB,index(antennae,{1;2},b),
+                    HSTACK(acc,Antinodes(grid,antA,antB))
+                )
+            )
+        )
+    )
+);
+
+AntennaeAntinodesP2 = LAMBDA(grid,antennae,
+    LET(
+        combos, Combos2(COLUMNS(antennae)),
+        REDUCE({0;0},SEQUENCE(COLUMNS(combos)),
+            LAMBDA(acc,i,
+                LET(
+                    a,index(combos,1,i),
+                    b,index(combos,2,i),
+                    antA,index(antennae,{1;2},a),
+                    antB,index(antennae,{1;2},b),
+                    HSTACK(acc,AntinodesP2(grid,antA,antB))
+                )
+            )
+        )
+    )
+);
+
+AllAntiNodes = LAMBDA(grid,
+    LET(
+        chars,drop(sort(uniquewithfunc((tocol(grid)),exact)),1),
+        antis,REDUCE({0;0},chars,
+            LAMBDA(acc,val,
+                HSTACK(acc,
+                    AntennaeAntinodes(grid,
+                        FindAllInMatrix(
+                            grid,
+                            LAMBDA(x,EXACT(x,val))
+                        )
+                    )
+                )
+            )
+        ),
+        DROP(unique(antis,TRUE),,1)
+    )
+);
+
+AllAntiNodesP2 = LAMBDA(grid,
+    LET(
+        chars,drop(sort(uniquewithfunc((tocol(grid)),exact)),1),
+        antis,REDUCE({0;0},chars,
+            LAMBDA(acc,val,
+                HSTACK(acc,
+                    AntennaeAntinodesP2(grid,
+                        FindAllInMatrix(
+                            grid,
+                            LAMBDA(x,EXACT(x,val))
+                        )
+                    )
+                )
+            )
+        ),
+        ans,DROP(unique(antis,TRUE),,1),
+        ans
+    )
+);
+
+AntiNodeGrid = LAMBDA(grid,func,
+    LET(
+        antis,func(grid),
+        arr, MAKEARRAY(ROWS(grid),COLUMNS(grid),
+            LAMBDA(r,c,
+                IsIn(VSTACK(r,c),antis,BYCOL)
+            )
+        ),
+        arr
+    )
+);
+
+Part1 = LAMBDA(input,
+    LET(
+        grid,InputToGrid(input),
+        antis,AllAntiNodes(grid),
+        COLUMNS(antis)
+    )
+);
+
+Part2 = LAMBDA(input,
+    LET(
+        grid,InputToGrid(input),
+        antis,AllAntiNodesP2(grid),
+        COLUMNS(antis)
+    )
+);
