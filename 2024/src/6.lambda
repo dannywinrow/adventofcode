@@ -1,0 +1,330 @@
+// LAMBDA formulas for Advent of Code
+// www.adventofcode.com
+// 2024 Day 6
+// Paste the input into a worksheet and use
+// Part1(Input) and Part2(Input) to calculate answers.
+// Where Input is the range you pasted into
+
+// Array formulae
+
+GetCharFrom = LAMBDA(input,
+    LAMBDA(r,c,
+        MID(INDEX(input, r), c, 1)
+    )
+);
+
+InputToGrid = LAMBDA(input,
+    MAKEARRAY(
+        ROWS(input),
+        LEN(TAKE(input,1)),
+        GetCharFrom(input)
+    )
+);
+
+FillArray = LAMBDA(r, c, val, MAKEARRAY(r, c, LAMBDA(r, c, val)));
+
+FindInArray = LAMBDA(array,validfunc,
+    LET( //func,IF(ISOMITTED(validfunc),LAMBDA(x,x=TRUE),validfunc),
+        res,
+            REDUCE(VSTACK(FALSE,0),array,LAMBDA(acc,val,
+                IF(
+                    INDEX(acc,1),
+                    acc,
+                    IF( 
+                        validfunc(val),
+                        VSTACK(TRUE,INDEX(acc,2)+1),
+                        VSTACK(FALSE,INDEX(acc,2)+1)
+                    )
+                )
+            )),
+    IF(Index(res,1),
+        Index(res,2),
+        FALSE)
+    )
+);
+
+FindInMatrix = LAMBDA(matrix,validfunc,
+    LET(
+        rowfind,BYROW(matrix,
+            LAMBDA(row,FindInArray(row,validfunc))
+        ),
+        row,FindInArray(rowfind,LAMBDA(x,NOT(x=FALSE))),
+        col,Index(rowfind,row),
+        VSTACK(row,col)
+    )
+);
+
+Div = LAMBDA(numerator,divisor,
+    FLOOR(numerator/divisor,1)
+);
+
+Indices = LAMBDA(rs,cs,
+    VSTACK(FLOOR((SEQUENCE(,rs*cs)-1)/cs,1)+1,OneMod(SEQUENCE(,rs*cs),cs))
+);
+IndicesM = LAMBDA(matrix,
+    Indices(ROWS(matrix),COLUMNS(matrix))
+);
+
+FindAllInMatrix = LAMBDA(matrix,validfunc,
+    FILTER(indicesM(matrix),validfunc(TOROW(matrix)))
+);
+
+XMATCHGRID = LAMBDA(tofind,grid,
+    FindInMatrix(grid,LAMBDA(x,x=tofind))
+);
+
+ColIsIn = LAMBDA(tofind,matrix,IsIn(tofind,matrix,BYCOL));
+RowIsIn = LAMBDA(tofind,matrix,IsIn(tofind,matrix,BYROW));
+IsIn = LAMBDA(tofind,matrix,[func_BYROW],
+    LET(
+        func,IF(ISOMITTED(func_BYROW),BYROW,func_BYROW),
+        found,OR(func(matrix,
+            LAMBDA(arr,AND(arr=tofind))
+        )),
+        found
+    )
+);
+
+OneMod = LAMBDA(number,divisor,
+    divisor-MOD(-number,divisor)
+);
+
+GetIndex = LAMBDA(arr,ind,
+    INDEX(arr,INDEX(ind,1,1),INDEX(ind,2,1))
+);
+
+SetIndex = LAMBDA(matrix,ind,value,
+    IF(AND(ind={0;0}),matrix,
+        LET(
+            row, Index(ind,1,1),
+            col, Index(ind,2,1),
+            fullrow, Index(matrix,row,0),
+            newrowA, IF(col = 1, value, HSTACK(Take(fullrow,,col-1),value)),
+            newrow,IF(col = COLUMNS(matrix), newrowA, HSTACK(newrowA,Drop(fullrow,,col))),
+            newmatrixA, IF(row = 1,newrow,VSTACK(Take(matrix,row-1),newrow)),
+            newmatrix, IF(row = ROWS(matrix),newmatrixA,VSTACK(newmatrixA,Drop(matrix,row))),
+            newmatrix
+        )
+    )
+);
+
+GetIndexes = LAMBDA(grid,inds,
+    BYCOL(inds,
+        LAMBDA(ind, GetIndex(grid,ind))
+    )
+);
+
+InBounds = LAMBDA(grid,ind,
+    LET(
+        nr,INDEX(ind,1,1),
+        nc,INDEX(ind,2,1),
+        AND(nr>=1,nc>=1,nr<=ROWS(grid),nc<=COLUMNS(grid))
+    )
+);
+
+ReverseRow = LAMBDA(arr,
+    INDEX(arr,SEQUENCE(ROWS(arr),ROWS(arr),-1))
+);
+
+// Solution
+
+Direction = LAMBDA(d,
+    CHOOSE(OneMod(d,4),{-1;0},{0;1},{1;0},{0;-1})
+);
+
+// Check how many steps in front of guard until he hits an
+// obstacle.
+ClearSteps = LAMBDA(grid,guard,facing,
+    LET(facedir,Direction(facing),
+        gr, INDEX(guard,1,1), // Very peculiar but if you don't index the column then sequence won't work
+        gc, INDEX(guard,2,1),
+        fr, INDEX(facedir,1,1),
+        fc, INDEX(facedir,2,1),
+        infront,IF(fr=0,
+            INDEX(grid,gr,
+                IF(SIGN(fc)=1,
+                    SEQUENCE(COLUMNS(grid)-gc,,gc+1,fc),
+                    SEQUENCE(gc-1,1,gc-1,fc)
+                )
+            ),
+            INDEX(grid,
+                IF(SIGN(fr)=1,
+                    SEQUENCE(ROWS(grid)-gr,,gr+1,fr),
+                    SEQUENCE(gr-1,1,gr-1,fr)
+                ),gc)
+            ),
+        steps,IF(
+                AND(
+                    ISERROR(VSTACK(infront))
+                ),
+                0,
+                IFNA(XMATCH("#",infront)-1,ROWS(infront))),
+        steps
+    )
+);
+
+// Return an array where each column represents a single step
+// in the guards path.
+// If [skipstraight] is TRUE, it returns only
+// the positions where he encounters an obstacle.
+// If [withfacing] is TRUE, it includes a 3rd row with the
+// facing direction of the guard at each step.
+WalkPath = LAMBDA(grid,guard,facing,[skipstraight],[withfacing],
+    LET(
+        steps,clearsteps(grid,guard,facing),
+        steparr,guard + SEQUENCE(,steps)*Direction(facing),
+        npos,Direction(facing)*steps + guard,
+        nr,INDEX(npos,1,1),
+        nc,INDEX(npos,2,1),
+        skipstr,IF(ISOMITTED(skipstraight),FALSE,skipstraight),
+        wf,IF(ISOMITTED(withfacing),false,withfacing),
+        retarrA,IF(skipstr,npos,steparr),
+        retarr,IF(wf,VSTACK(retarrA,FillArray(1,COLUMNS(retarrA),facing))),
+        ans,IF(OR(nr=1,nc=1,nr=ROWS(grid),nc=COLUMNS(grid)),
+            retarr,
+            HSTACK(retarr,
+                WalkPath(grid,npos,OneMod(facing+1,4),skipstr, withfacing)
+            )
+        ),
+        ans
+    )
+);
+
+// This returns each position in the guards walk where
+// he hits and obstacle and is facing in the original direction.
+// (so every 4 straight walks)
+Walk4Paths = LAMBDA(grid,guard,facing,
+    IF(AND(guard={0;0}),{0;0},
+        LET(
+            npos, NextPosMult(grid,guard,facing,4),
+            IF(AND(npos={0;0}),{0;0},
+                HSTACK(npos,Walk4Paths(grid,npos,facing))
+            )
+        )
+    )
+);
+
+// To reduce the number of positions returned we can do
+// 4 steps at a time since all loops must contain
+// positions with each of the four facing directions
+// in order to be a loop.
+// So when checking for a loop it is enough to only
+// know the positions when facing in a particular direction
+IsLoop4Step = LAMBDA(grid,guard,facing,[visited],
+    IF(
+        // Check whether last position the guard exited
+        AND(guard={0;0}),
+        false,
+        LET(
+            npos,NextPosMult(grid,guard,facing,4),
+            isloop,IF(ISOMITTED(visited),false,
+                        IsIn(npos,visited,BYCOL)),
+            newvisited,IF(ISOMITTED(visited),npos,
+                        HSTACK(npos,visited)),
+            IF(isloop,
+                true,
+                IsLoop4Step(
+                    grid,
+                    npos,
+                    facing,
+                    newvisited
+                )
+            )
+        )
+    )
+);
+
+// Performs a reduce over the next n positions
+// and returns the last position
+NextPosMult = LAMBDA(grid,guard,facing,n,
+    REDUCE(
+        guard,
+        SEQUENCE(n,,facing),
+        LAMBDA(g,f,NextPos(grid,g,f))
+    )
+);
+
+// Returns the next position of the guard,
+// or {0,0} if the guard left the grid.
+NextPos = LAMBDA(grid,guard,facing,
+    IF(AND(guard={0;0}),{0;0},
+        LET(
+            steps,clearsteps(grid,guard,facing),
+            npos,Direction(facing)*steps + guard,
+            nr,INDEX(npos,1,1),
+            nc,INDEX(npos,2,1),
+            IF(OR(nr=1,nc=1,nr=ROWS(grid),nc=COLUMNS(grid)),
+                {0;0},
+                npos
+            )
+        )
+    )
+);
+
+Part1 = LAMBDA(input,
+    LET(grid,InputToGrid(input),
+        guard,XMATCHGRID("^",grid),
+        facing,1,
+        visited,UNIQUE(HSTACK(guard,WalkPath(grid,guard,facing)),TRUE),
+        COLUMNS(visited)
+    )
+);
+
+NotIsObstacleF = LAMBDA(grid,
+    LAMBDA(inds,
+        BYCOL(inds,
+            LAMBDA(ind,
+                AND(InBounds(grid,ind),GetIndex(grid,ind) <> "#")
+            )
+        )
+    )
+);
+
+LoopsFromVisited = LAMBDA(grid,guard,visited,
+    //REDUCE no quicker than MAP or BYCOL unfortunately
+    MAP(SEQUENCE(,COLUMNS(visited)),
+        LAMBDA(i,
+            LET(o,INDEX(visited,{1;2},i),
+                fa,INDEX(visited,3,i),
+                // Find first position not an obstacle which the
+                // guard hits this new obstacle with
+                fb,XMATCH(TRUE,
+                    NotIsObstacleF(grid)(
+                        o-Direction(SEQUENCE(,4,fa,-1))
+                    )),
+                f,fa+fb-1,
+                g, o-Direction(f),
+                //Don't process future steps in the guard's path as
+                //obstacles if the guard hits that position earlier
+                //in his walk and so the obstacle has already been seen.
+                seen,IF(i=1,false,IsIn(o,INDEX(visited,{1;2},SEQUENCE(,i-1)),BYCOL)),
+                ret,IF(
+                        OR(AND(g=guard),seen),
+                        false,
+                        IsLoop4Step(
+                            SetIndex(grid,o,"#"),
+                            g,
+                            f
+                        )
+                ),
+                ret
+            )
+        )
+    )
+);
+
+// WARNING on a full input this might take a couple of hours to
+// run.  You can use the [start] and [finish] arguments to run
+// the obstacles
+Part2 = LAMBDA(input,[start],[finish],
+    LET(grid,InputToGrid(input),
+        guard,XMATCHGRID("^",grid),
+        facing,1,
+        visited,WalkPath(grid,guard,facing,FALSE,TRUE),
+        s,IF(ISOMITTED(start),1,start),
+        f,IF(ISOMITTED(finish),COLUMNS(visited),finish),
+        tovis,INDEX(visited,{1;2;3},SEQUENCE(,f-s+1,s)),
+        ret,LoopsFromVisited(grid,guard,tovis),
+        SUM(--ret)
+    )
+);
